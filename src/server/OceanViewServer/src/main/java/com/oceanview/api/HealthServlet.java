@@ -9,6 +9,6 @@ public class HealthServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("text/plain");
-        resp.getWriter().write("OK - OceanViewServer running");
+        resp.getWriter().write("OceanView Server is running successfully");
     }
 }
