@@ -4,20 +4,18 @@ import java.time.LocalDate;
 
 public class Reservation {
     private int reservationId;
-    private String guestName;
+    private String reservationCode;
+    private int guestId;
+    private int roomTypeId;
+    private Integer roomId;
     private LocalDate checkIn;
     private LocalDate checkOut;
-    private String roomType;
+    private int numGuests;
+    private String status;
+    private String specialRequests;
+    private Integer createdBy;
 
     public Reservation() {
-    }
-
-    public Reservation(int reservationId, String guestName, LocalDate checkIn, LocalDate checkOut, String roomType) {
-        this.reservationId = reservationId;
-        this.guestName = guestName;
-        this.checkIn = checkIn;
-        this.checkOut = checkOut;
-        this.roomType = roomType;
     }
 
     public int getReservationId() {
@@ -28,12 +26,36 @@ public class Reservation {
         this.reservationId = reservationId;
     }
 
-    public String getGuestName() {
-        return guestName;
+    public String getReservationCode() {
+        return reservationCode;
     }
 
-    public void setGuestName(String guestName) {
-        this.guestName = guestName;
+    public void setReservationCode(String reservationCode) {
+        this.reservationCode = reservationCode;
+    }
+
+    public int getGuestId() {
+        return guestId;
+    }
+
+    public void setGuestId(int guestId) {
+        this.guestId = guestId;
+    }
+
+    public int getRoomTypeId() {
+        return roomTypeId;
+    }
+
+    public void setRoomTypeId(int roomTypeId) {
+        this.roomTypeId = roomTypeId;
+    }
+
+    public Integer getRoomId() {
+        return roomId;
+    }
+
+    public void setRoomId(Integer roomId) {
+        this.roomId = roomId;
     }
 
     public LocalDate getCheckIn() {
@@ -52,11 +74,35 @@ public class Reservation {
         this.checkOut = checkOut;
     }
 
-    public String getRoomType() {
-        return roomType;
+    public int getNumGuests() {
+        return numGuests;
     }
 
-    public void setRoomType(String roomType) {
-        this.roomType = roomType;
+    public void setNumGuests(int numGuests) {
+        this.numGuests = numGuests;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getSpecialRequests() {
+        return specialRequests;
+    }
+
+    public void setSpecialRequests(String specialRequests) {
+        this.specialRequests = specialRequests;
+    }
+
+    public Integer getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(Integer createdBy) {
+        this.createdBy = createdBy;
     }
 }

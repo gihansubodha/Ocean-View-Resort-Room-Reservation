@@ -22,7 +22,9 @@
 <p>
     <a href="<%= request.getContextPath() %>/rooms">View Rooms</a>
 </p>
-
+<p>
+    <a href="<%= request.getContextPath() %>/reservations/add">Add Reservation</a>
+</p>
 <p>
     <a href="${pageContext.request.contextPath}/logout">Logout</a>
 </p>

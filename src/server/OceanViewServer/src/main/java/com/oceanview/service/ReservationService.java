@@ -25,12 +25,14 @@ public class ReservationService {
 
     private void validateReservation(Reservation r) {
         if (r == null) throw new IllegalArgumentException("Reservation is null");
-        if (r.getGuestName() == null || r.getGuestName().trim().isEmpty())
-            throw new IllegalArgumentException("Guest name required");
+        if (r.getGuestId() <= 0)
+            throw new IllegalArgumentException("Valid guest ID required");
 
         LocalDate in = r.getCheckIn();
         LocalDate out = r.getCheckOut();
-        if (in == null || out == null) throw new IllegalArgumentException("Dates required");
-        if (!out.isAfter(in)) throw new IllegalArgumentException("Check-out must be after check-in");
+        if (in == null || out == null)
+            throw new IllegalArgumentException("Dates required");
+        if (!out.isAfter(in))
+            throw new IllegalArgumentException("Check-out must be after check-in");
     }
 }
