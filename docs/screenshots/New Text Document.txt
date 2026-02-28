@@ -1,0 +1,300 @@
+# Screenshots Plan (Evidence Checklist)
+## Ocean View Resort – Online Room Reservation System (Java EE / Tomcat / WAMP)
+
+## Purpose
+This document lists the screenshots that will be captured as evidence to prove:
+- correct distributed Java EE system design decisions,
+- correct UML application and architecture alignment,
+- correct use of database and connection strategy,
+- validation and error handling quality,
+- testing strategies and 50 test cases evidence,
+- version control under the Unified Process (UP).
+
+Each screenshot is mapped to a marking requirement to ensure full coverage.
+
+---
+
+# A) Repository + Unified Process Evidence (Task D)
+
+### SS-A1 — GitHub repository main page
+**What it proves:**
+- Public repository exists
+- Project title and structure are visible
+
+**Where to include:**
+- Documentation / GitHub section in report
+
+---
+
+### SS-A2 — Folder structure screenshot (local or GitHub)
+Show:
+- `/docs`, `/src`, `/database`, `/testing` folders
+
+**What it proves:**
+- Professional organisation of artifacts
+- UP-style separation of documentation and implementation
+
+---
+
+### SS-A3 — UP Plan markdown open (`UP-plan.md`)
+**What it proves:**
+- Unified Process planning exists with phases and iterations
+
+---
+
+### SS-A4 — Git commit history screenshot (graph or list)
+**What it proves:**
+- Incremental development
+- Daily/iterative progress aligned with UP
+
+---
+
+### SS-A5 — Tags/Releases screenshot (v0.1, v0.2, v1.0)
+**What it proves:**
+- Versioning discipline
+- Final submission baseline is clear
+
+---
+
+# B) UML + Design Evidence (Task A)
+
+### SS-B1 — Use Case Diagram image
+**What it proves:**
+- Correct actors and use cases
+- Correct use of <<include>> / <<extend>> where needed
+
+---
+
+### SS-B2 — Class Diagram image
+**What it proves:**
+- Encapsulation visible (private/public)
+- Correct attributes and method signatures
+- Multiplicity, relationships, composition/aggregation evidence
+
+---
+
+### SS-B3 — Sequence Diagram 1 (Login)
+**What it proves:**
+- Distributed interaction flow
+- Validates architecture-level design
+
+---
+
+### SS-B4 — Sequence Diagram 2 (Add Reservation)
+**What it proves:**
+- Flow across UI → service → DAO → DB
+
+---
+
+### SS-B5 — Sequence Diagram 3 (Generate Bill)
+**What it proves:**
+- Correct billing flow and service responsibility
+
+---
+
+# C) Distributed Architecture + Server Evidence (Task B)
+
+### SS-C1 — Architecture diagram (3-tier)
+Show:
+- Client/UI
+- Web services layer
+- Service layer
+- DAO layer
+- MySQL database
+
+**What it proves:**
+- Architecture justification aligned with theory
+
+---
+
+### SS-C2 — Tomcat running (manager/app list or console)
+**What it proves:**
+- System is deployed and running on Tomcat
+
+---
+
+### SS-C3 — Application running in browser (simple UI is fine)
+**What it proves:**
+- Presentation layer works
+- User interaction available
+
+---
+
+### SS-C4 — Console output from a “service class” (optional but strong)
+Example:
+- Print reservation details
+- Print bill
+- Print validation errors
+
+**What it proves:**
+- Business logic layer functions independently of UI
+- Supports separation of concerns
+
+---
+
+# D) Database Evidence (Task B)
+
+### SS-D1 — WAMP control panel showing MySQL running
+**What it proves:**
+- Database environment is operational
+
+---
+
+### SS-D2 — phpMyAdmin showing created database
+**What it proves:**
+- Proper database setup
+
+---
+
+### SS-D3 — Table structure screenshot (users, guests, reservations, room_types)
+**What it proves:**
+- Normalisation, constraints, correct schema
+
+---
+
+### SS-D4 — Sample data rows screenshot
+Show inserted reservation records
+
+**What it proves:**
+- Persistence is working
+- Data is stored correctly
+
+---
+
+### SS-D5 — DB connection configuration evidence
+Depending on approach:
+- DriverManager config screenshot OR
+- Tomcat JNDI DataSource config screenshot
+
+**What it proves:**
+- Professional connection decision implemented
+
+---
+
+# E) Validation + Error Handling Evidence (Task B + Quality)
+
+### SS-E1 — Validation: empty required fields
+Example:
+- empty guest name
+- empty contact number
+
+**What it proves:**
+- Validation rules restrict invalid entries (explicit requirement)
+
+---
+
+### SS-E2 — Validation: invalid date order
+Example:
+- check-out before check-in
+
+**What it proves:**
+- Prevents invalid state and billing errors
+
+---
+
+### SS-E3 — Friendly error message screenshot (DB down / invalid search)
+**What it proves:**
+- Error handling is user-friendly and professional
+
+---
+
+# F) Testing Evidence (Task C)
+
+### SS-F1 — Test plan table screenshot (document)
+**What it proves:**
+- Formal QA planning exists
+
+---
+
+### SS-F2 — JUnit unit tests passing (green)
+**What it proves:**
+- Automation evidence
+- Unit testing strategy is applied
+
+---
+
+### SS-F3 — Integration test evidence (DB changes)
+Example:
+- insert reservation, then show record exists in DB
+
+**What it proves:**
+- Integration testing is performed and verified
+
+---
+
+### SS-F4 — System test evidence (end-to-end flow)
+Example:
+- Login → Add reservation → View reservation → Generate bill
+
+**What it proves:**
+- Full workflow meets requirements
+
+---
+
+### SS-F5 — 50 test case evidence pack (folder screenshot)
+Include:
+- `test-cases-50.md`
+- screenshot files named TC01, TC02…
+
+**What it proves:**
+- Completeness and compliance with test volume requirement
+
+---
+
+# G) Reports + Value-Added Evidence (Bonus for 90+)
+
+### SS-G1 — Reservations summary report output
+Example:
+- list of reservations
+- upcoming check-ins
+- occupancy summary
+
+**What it proves:**
+- Added value beyond minimum requirements
+
+---
+
+### SS-G2 — Billing report / revenue estimate (optional)
+**What it proves:**
+- Decision-making outputs (high-quality engineering thinking)
+
+---
+
+# H) Final Submission Evidence (Transition Phase)
+
+### SS-H1 — “Final run” screenshot
+Show:
+- application running correctly
+- key features accessible
+
+---
+
+### SS-H2 — Final GitHub link + last commit screenshot
+**What it proves:**
+- Final version is delivered and traceable
+
+---
+
+# Screenshot Naming Standard (IMPORTANT)
+All screenshots should be saved inside:
+`/docs/screenshots/`
+
+Naming format:
+- `SS-A1_GitHubRepo.png`
+- `SS-B2_ClassDiagram.png`
+- `TC01_ValidLogin.png`
+- `TC11_AddReservationValid.png`
+
+This naming makes your evidence easy for the marker to verify quickly.
+
+---
+
+# Summary
+This evidence plan ensures every marking area is supported with traceable proof:
+- UML quality
+- architecture decisions
+- database and connection strategy
+- validation and robustness
+- testing depth (strategies + 50 cases)
+- version control under Unified Process
+- professional documentation
