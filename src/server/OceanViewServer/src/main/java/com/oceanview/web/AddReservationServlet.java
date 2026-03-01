@@ -32,7 +32,6 @@ public class AddReservationServlet extends HttpServlet {
     private final RoomDAO roomDAO = new RoomDAOImpl();
     private final GuestDAO guestDAO = new GuestDAOImpl();
 
-    // matches your ReservationService constructor
     private final ReservationService reservationService =
             new ReservationService(new ReservationDAOImpl());
 
@@ -62,7 +61,7 @@ public class AddReservationServlet extends HttpServlet {
             throws ServletException, IOException {
 
         try {
-            // 1. Build guest from form
+            // 1) Build guest
             Guest guest = new Guest();
             guest.setFirstName(request.getParameter("firstName"));
             guest.setLastName(request.getParameter("lastName"));
@@ -71,10 +70,10 @@ public class AddReservationServlet extends HttpServlet {
             guest.setEmail(request.getParameter("email"));
             guest.setAddress(request.getParameter("address"));
 
-            // 2. Find existing guest or create new guest
+            // 2) Resolve guest id
             int guestId = resolveGuestId(guest);
 
-            // 3. Build reservation from form
+            // 3) Build reservation
             Reservation reservation = new Reservation();
             reservation.setGuestId(guestId);
             reservation.setRoomTypeId(Integer.parseInt(request.getParameter("roomTypeId")));
@@ -89,7 +88,6 @@ public class AddReservationServlet extends HttpServlet {
             reservation.setNumGuests(Integer.parseInt(request.getParameter("numGuests")));
             reservation.setSpecialRequests(request.getParameter("specialRequests"));
 
-            // Since your ReservationService does not generate these, set them here
             reservation.setReservationCode(generateReservationCode());
             reservation.setStatus("CONFIRMED");
 
@@ -103,20 +101,19 @@ public class AddReservationServlet extends HttpServlet {
                 }
             }
 
-            // 4. Create reservation
+            // 4) Create reservation
             int reservationId = reservationService.createReservation(reservation);
 
-            request.setAttribute("success",
-                    "Reservation created successfully. Reservation ID: " + reservationId +
-                            " | Code: " + reservation.getReservationCode());
-
-            // 5. Update room status if a specific room was selected
+            // 5) Update room status if selected
             if (reservation.getRoomId() != null) {
-                roomDAO.updateStatus(reservation.getRoomId(), "RESERVED"); // must match ENUM exactly
+                roomDAO.updateStatus(reservation.getRoomId(), "RESERVED");
             }
 
-            loadFormData(request);
-            request.getRequestDispatcher("/app/add-reservation.jsp").forward(request, response);
+            //PRG method is Redirecting to details page + created flag
+            String url = request.getContextPath()
+                    + "/reservations/view?id=" + reservationId
+                    + "&created=1";
+            response.sendRedirect(url);
 
         } catch (Exception e) {
             request.setAttribute("error", e.getMessage());
@@ -131,8 +128,7 @@ public class AddReservationServlet extends HttpServlet {
                     request.setAttribute("availableRooms", availableRooms);
                     request.setAttribute("selectedRoomTypeId", roomTypeId);
                 }
-            } catch (Exception ignored) {
-            }
+            } catch (Exception ignored) {}
 
             request.getRequestDispatcher("/app/add-reservation.jsp").forward(request, response);
         }
@@ -148,23 +144,17 @@ public class AddReservationServlet extends HttpServlet {
     }
 
     private int resolveGuestId(Guest guest) throws Exception {
-        if (guest.getFirstName() == null || guest.getFirstName().isBlank()) {
+        if (guest.getFirstName() == null || guest.getFirstName().isBlank())
             throw new Exception("First name is required.");
-        }
-        if (guest.getLastName() == null || guest.getLastName().isBlank()) {
+        if (guest.getLastName() == null || guest.getLastName().isBlank())
             throw new Exception("Last name is required.");
-        }
-        if (guest.getPhone() == null || guest.getPhone().isBlank()) {
+        if (guest.getPhone() == null || guest.getPhone().isBlank())
             throw new Exception("Phone is required.");
-        }
 
         if (guest.getNicPassport() != null && !guest.getNicPassport().isBlank()) {
             Guest existingGuest = guestDAO.findByNicPassport(guest.getNicPassport());
-            if (existingGuest != null) {
-                return existingGuest.getGuestId();
-            }
+            if (existingGuest != null) return existingGuest.getGuestId();
         }
-
         return guestDAO.insert(guest);
     }
 
