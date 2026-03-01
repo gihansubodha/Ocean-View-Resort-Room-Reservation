@@ -122,36 +122,6 @@
 
     <form method="post" action="<%= request.getContextPath() %>/reservations/add">
         <div class="row">
-            <label>First Name:</label>
-            <input type="text" name="firstName" value="<%= firstName %>" required>
-        </div>
-
-        <div class="row">
-            <label>Last Name:</label>
-            <input type="text" name="lastName" value="<%= lastName %>" required>
-        </div>
-
-        <div class="row">
-            <label>NIC / Passport:</label>
-            <input type="text" name="nicPassport" value="<%= nicPassport %>">
-        </div>
-
-        <div class="row">
-            <label>Phone:</label>
-            <input type="text" name="phone" value="<%= phone %>" required>
-        </div>
-
-        <div class="row">
-            <label>Email:</label>
-            <input type="email" name="email" value="<%= email %>">
-        </div>
-
-        <div class="row">
-            <label>Address:</label>
-            <textarea name="address"><%= address %></textarea>
-        </div>
-
-        <div class="row">
             <label>Room Type:</label>
             <select name="roomTypeId"
                     onchange="window.location='<%= request.getContextPath() %>/reservations/add?roomTypeId=' + this.value"
@@ -211,6 +181,36 @@
         <div class="row">
             <label>Check-Out Date:</label>
             <input type="date" name="checkOut" value="<%= checkOut %>" required>
+        </div>
+
+        <div class="row">
+            <label>First Name:</label>
+            <input type="text" name="firstName" value="<%= firstName %>" required>
+        </div>
+
+        <div class="row">
+            <label>Last Name:</label>
+            <input type="text" name="lastName" value="<%= lastName %>" required>
+        </div>
+
+        <div class="row">
+            <label>NIC / Passport:</label>
+            <input type="text" name="nicPassport" value="<%= nicPassport %>">
+        </div>
+
+        <div class="row">
+            <label>Phone:</label>
+            <input type="text" name="phone" value="<%= phone %>" required>
+        </div>
+
+        <div class="row">
+            <label>Email:</label>
+            <input type="email" name="email" value="<%= email %>">
+        </div>
+
+        <div class="row">
+            <label>Address:</label>
+            <textarea name="address"><%= address %></textarea>
         </div>
 
         <div class="row">

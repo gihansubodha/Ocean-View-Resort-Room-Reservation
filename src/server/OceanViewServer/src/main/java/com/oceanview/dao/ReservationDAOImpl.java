@@ -1,6 +1,7 @@
 package com.oceanview.dao;
 
 import com.oceanview.model.Reservation;
+import com.oceanview.model.ReservationDetails;
 import com.oceanview.util.DbUtil;
 
 import java.sql.Connection;
@@ -45,9 +46,7 @@ public class ReservationDAOImpl implements ReservationDAO {
             ps.executeUpdate();
 
             try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+                if (rs.next()) return rs.getInt(1);
             }
         }
 
@@ -91,5 +90,56 @@ public class ReservationDAOImpl implements ReservationDAO {
         }
 
         return null;
+    }
+
+    @Override
+    public ReservationDetails findDetailsById(int reservationId) throws Exception {
+        String sql =
+                "SELECT " +
+                        " r.reservation_id, r.reservation_code, r.check_in, r.check_out, r.num_guests, r.status AS reservation_status, r.special_requests, " +
+                        " g.guest_id, g.first_name, g.last_name, g.phone, g.email, g.nic_passport, " +
+                        " r.room_id, rm.room_number, " +
+                        " rt.room_type_id, rt.type_name, rt.nightly_rate " +
+                        "FROM reservations r " +
+                        "JOIN guests g ON r.guest_id = g.guest_id " +
+                        "JOIN room_types rt ON r.room_type_id = rt.room_type_id " +
+                        "LEFT JOIN rooms rm ON r.room_id = rm.room_id " +
+                        "WHERE r.reservation_id = ?";
+
+        try (Connection con = DbUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, reservationId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return null;
+
+                ReservationDetails d = new ReservationDetails();
+                d.setReservationId(rs.getInt("reservation_id"));
+                d.setReservationCode(rs.getString("reservation_code"));
+                d.setCheckIn(rs.getDate("check_in").toLocalDate());
+                d.setCheckOut(rs.getDate("check_out").toLocalDate());
+                d.setNumGuests(rs.getInt("num_guests"));
+                d.setReservationStatus(rs.getString("reservation_status"));
+                d.setSpecialRequests(rs.getString("special_requests"));
+
+                d.setGuestId(rs.getInt("guest_id"));
+                d.setGuestFirstName(rs.getString("first_name"));
+                d.setGuestLastName(rs.getString("last_name"));
+                d.setGuestPhone(rs.getString("phone"));
+                d.setGuestEmail(rs.getString("email"));
+                d.setGuestNicPassport(rs.getString("nic_passport"));
+
+                int roomId = rs.getInt("room_id");
+                d.setRoomId(rs.wasNull() ? null : roomId);
+                d.setRoomNumber(rs.getString("room_number"));
+
+                d.setRoomTypeId(rs.getInt("room_type_id"));
+                d.setRoomTypeName(rs.getString("type_name"));
+                d.setNightlyRate(rs.getDouble("nightly_rate"));
+
+                return d;
+            }
+        }
     }
 }
