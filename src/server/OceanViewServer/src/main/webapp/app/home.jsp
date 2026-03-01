@@ -25,6 +25,9 @@
 <p>
     <a href="<%= request.getContextPath() %>/reservations/add">Add Reservation</a>
 </p>
+<a class="btn" href="<%= request.getContextPath() %>/reservations/view">View Reservation</a>
+<a class="btn" href="<%= request.getContextPath() %>/bills/view">View Bills</a>
+<a class="btn" href="<%= request.getContextPath() %>/app/help.jsp">Help</a>
 <p>
     <a href="${pageContext.request.contextPath}/logout">Logout</a>
 </p>
