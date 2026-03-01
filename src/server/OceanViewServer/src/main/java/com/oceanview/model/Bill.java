@@ -3,19 +3,24 @@ package com.oceanview.model;
 import java.math.BigDecimal;
 
 public class Bill {
+    private int billId;
     private int reservationId;
     private int nights;
     private BigDecimal nightlyRate;
+    private BigDecimal subtotal;
+    private BigDecimal discountAmount;
+    private BigDecimal taxAmount;
     private BigDecimal total;
 
     public Bill() {
     }
 
-    public Bill(int reservationId, int nights, BigDecimal nightlyRate, BigDecimal total) {
-        this.reservationId = reservationId;
-        this.nights = nights;
-        this.nightlyRate = nightlyRate;
-        this.total = total;
+    public int getBillId() {
+        return billId;
+    }
+
+    public void setBillId(int billId) {
+        this.billId = billId;
     }
 
     public int getReservationId() {
@@ -40,6 +45,30 @@ public class Bill {
 
     public void setNightlyRate(BigDecimal nightlyRate) {
         this.nightlyRate = nightlyRate;
+    }
+
+    public BigDecimal getSubtotal() {
+        return subtotal;
+    }
+
+    public void setSubtotal(BigDecimal subtotal) {
+        this.subtotal = subtotal;
+    }
+
+    public BigDecimal getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(BigDecimal discountAmount) {
+        this.discountAmount = discountAmount;
+    }
+
+    public BigDecimal getTaxAmount() {
+        return taxAmount;
+    }
+
+    public void setTaxAmount(BigDecimal taxAmount) {
+        this.taxAmount = taxAmount;
     }
 
     public BigDecimal getTotal() {

@@ -110,6 +110,11 @@ public class AddReservationServlet extends HttpServlet {
                     "Reservation created successfully. Reservation ID: " + reservationId +
                             " | Code: " + reservation.getReservationCode());
 
+            // 5. Update room status if a specific room was selected
+            if (reservation.getRoomId() != null) {
+                roomDAO.updateStatus(reservation.getRoomId(), "RESERVED"); // must match ENUM exactly
+            }
+
             loadFormData(request);
             request.getRequestDispatcher("/app/add-reservation.jsp").forward(request, response);
 
