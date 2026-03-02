@@ -1,6 +1,7 @@
 package com.oceanview.dao;
 
 import com.oceanview.model.Reservation;
+import com.oceanview.model.ReservationDetails;
 import com.oceanview.util.DbUtil;
 
 import java.sql.Connection;
@@ -8,6 +9,9 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ReservationDAOImpl implements ReservationDAO {
 
@@ -45,9 +49,7 @@ public class ReservationDAOImpl implements ReservationDAO {
             ps.executeUpdate();
 
             try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+                if (rs.next()) return rs.getInt(1);
             }
         }
 
@@ -91,5 +93,216 @@ public class ReservationDAOImpl implements ReservationDAO {
         }
 
         return null;
+    }
+
+    @Override
+    public ReservationDetails findDetailsById(int reservationId) throws Exception {
+        String sql =
+                "SELECT " +
+                        " r.reservation_id, r.reservation_code, r.check_in, r.check_out, r.num_guests, r.status AS reservation_status, r.special_requests, " +
+                        " g.guest_id, g.first_name, g.last_name, g.phone, g.email, g.nic_passport, " +
+                        " r.room_id, rm.room_number, " +
+                        " rt.room_type_id, rt.type_name, rt.nightly_rate " +
+                        "FROM reservations r " +
+                        "JOIN guests g ON r.guest_id = g.guest_id " +
+                        "JOIN room_types rt ON r.room_type_id = rt.room_type_id " +
+                        "LEFT JOIN rooms rm ON r.room_id = rm.room_id " +
+                        "WHERE r.reservation_id = ?";
+
+        try (Connection con = DbUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, reservationId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return null;
+                return mapReservationDetails(rs);
+            }
+        }
+    }
+
+    // =========================
+    // Extra search features
+    // =========================
+
+    public ReservationDetails findDetailsByCode(String code) throws Exception {
+        String sql =
+                "SELECT " +
+                        " r.reservation_id, r.reservation_code, r.check_in, r.check_out, r.num_guests, r.status AS reservation_status, r.special_requests, " +
+                        " g.guest_id, g.first_name, g.last_name, g.phone, g.email, g.nic_passport, " +
+                        " r.room_id, rm.room_number, " +
+                        " rt.room_type_id, rt.type_name, rt.nightly_rate " +
+                        "FROM reservations r " +
+                        "JOIN guests g ON r.guest_id = g.guest_id " +
+                        "JOIN room_types rt ON r.room_type_id = rt.room_type_id " +
+                        "LEFT JOIN rooms rm ON r.room_id = rm.room_id " +
+                        "WHERE r.reservation_code = ?";
+
+        try (Connection con = DbUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, code);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return null;
+                return mapReservationDetails(rs);
+            }
+        }
+    }
+
+    public List<ReservationDetails> findTodayArrivals(LocalDate today) throws Exception {
+        String sql =
+                "SELECT " +
+                        " r.reservation_id, r.reservation_code, r.check_in, r.check_out, r.num_guests, r.status AS reservation_status, r.special_requests, " +
+                        " g.guest_id, g.first_name, g.last_name, g.phone, g.email, g.nic_passport, " +
+                        " r.room_id, rm.room_number, " +
+                        " rt.room_type_id, rt.type_name, rt.nightly_rate " +
+                        "FROM reservations r " +
+                        "JOIN guests g ON r.guest_id = g.guest_id " +
+                        "JOIN room_types rt ON r.room_type_id = rt.room_type_id " +
+                        "LEFT JOIN rooms rm ON r.room_id = rm.room_id " +
+                        "WHERE r.check_in = ? " +
+                        "ORDER BY r.check_in ASC, r.reservation_id DESC";
+
+        try (Connection con = DbUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setDate(1, Date.valueOf(today));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                List<ReservationDetails> list = new ArrayList<>();
+                while (rs.next()) {
+                    list.add(mapReservationDetails(rs));
+                }
+                return list;
+            }
+        }
+    }
+
+    public List<ReservationDetails> findTodayDepartures(LocalDate today) throws Exception {
+        String sql =
+                "SELECT " +
+                        " r.reservation_id, r.reservation_code, r.check_in, r.check_out, r.num_guests, r.status AS reservation_status, r.special_requests, " +
+                        " g.guest_id, g.first_name, g.last_name, g.phone, g.email, g.nic_passport, " +
+                        " r.room_id, rm.room_number, " +
+                        " rt.room_type_id, rt.type_name, rt.nightly_rate " +
+                        "FROM reservations r " +
+                        "JOIN guests g ON r.guest_id = g.guest_id " +
+                        "JOIN room_types rt ON r.room_type_id = rt.room_type_id " +
+                        "LEFT JOIN rooms rm ON r.room_id = rm.room_id " +
+                        "WHERE r.check_out = ? " +
+                        "ORDER BY r.check_out ASC, r.reservation_id DESC";
+
+        try (Connection con = DbUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setDate(1, Date.valueOf(today));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                List<ReservationDetails> list = new ArrayList<>();
+                while (rs.next()) {
+                    list.add(mapReservationDetails(rs));
+                }
+                return list;
+            }
+        }
+    }
+
+    public List<ReservationDetails> searchDetails(
+            String nic, String phone, String email,
+            String roomNumber, LocalDate from, LocalDate to
+    ) throws Exception {
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT " +
+                        " r.reservation_id, r.reservation_code, r.check_in, r.check_out, r.num_guests, r.status AS reservation_status, r.special_requests, " +
+                        " g.guest_id, g.first_name, g.last_name, g.phone, g.email, g.nic_passport, " +
+                        " r.room_id, rm.room_number, " +
+                        " rt.room_type_id, rt.type_name, rt.nightly_rate " +
+                        "FROM reservations r " +
+                        "JOIN guests g ON r.guest_id = g.guest_id " +
+                        "JOIN room_types rt ON r.room_type_id = rt.room_type_id " +
+                        "LEFT JOIN rooms rm ON r.room_id = rm.room_id " +
+                        "WHERE 1=1 "
+        );
+
+        List<Object> params = new ArrayList<>();
+
+        if (nic != null && !nic.trim().isEmpty()) {
+            sql.append(" AND g.nic_passport = ? ");
+            params.add(nic.trim());
+        }
+        if (phone != null && !phone.trim().isEmpty()) {
+            sql.append(" AND g.phone = ? ");
+            params.add(phone.trim());
+        }
+        if (email != null && !email.trim().isEmpty()) {
+            sql.append(" AND g.email = ? ");
+            params.add(email.trim());
+        }
+        if (roomNumber != null && !roomNumber.trim().isEmpty()) {
+            sql.append(" AND rm.room_number = ? ");
+            params.add(roomNumber.trim());
+        }
+
+        if (from != null) {
+            sql.append(" AND r.check_in >= ? ");
+            params.add(Date.valueOf(from));
+        }
+        if (to != null) {
+            sql.append(" AND r.check_in <= ? ");
+            params.add(Date.valueOf(to));
+        }
+
+        sql.append(" ORDER BY r.check_in DESC, r.reservation_id DESC ");
+
+        try (Connection con = DbUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql.toString())) {
+
+            for (int i = 0; i < params.size(); i++) {
+                Object p = params.get(i);
+                if (p instanceof Date) {
+                    ps.setDate(i + 1, (Date) p);
+                } else {
+                    ps.setObject(i + 1, p);
+                }
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                List<ReservationDetails> list = new ArrayList<>();
+                while (rs.next()) {
+                    list.add(mapReservationDetails(rs));
+                }
+                return list;
+            }
+        }
+    }
+
+    private ReservationDetails mapReservationDetails(ResultSet rs) throws Exception {
+        ReservationDetails d = new ReservationDetails();
+        d.setReservationId(rs.getInt("reservation_id"));
+        d.setReservationCode(rs.getString("reservation_code"));
+        d.setCheckIn(rs.getDate("check_in").toLocalDate());
+        d.setCheckOut(rs.getDate("check_out").toLocalDate());
+        d.setNumGuests(rs.getInt("num_guests"));
+        d.setReservationStatus(rs.getString("reservation_status"));
+        d.setSpecialRequests(rs.getString("special_requests"));
+
+        d.setGuestId(rs.getInt("guest_id"));
+        d.setGuestFirstName(rs.getString("first_name"));
+        d.setGuestLastName(rs.getString("last_name"));
+        d.setGuestPhone(rs.getString("phone"));
+        d.setGuestEmail(rs.getString("email"));
+        d.setGuestNicPassport(rs.getString("nic_passport"));
+
+        int roomId = rs.getInt("room_id");
+        d.setRoomId(rs.wasNull() ? null : roomId);
+        d.setRoomNumber(rs.getString("room_number"));
+
+        d.setRoomTypeId(rs.getInt("room_type_id"));
+        d.setRoomTypeName(rs.getString("type_name"));
+        d.setNightlyRate(rs.getDouble("nightly_rate"));
+
+        return d;
     }
 }
