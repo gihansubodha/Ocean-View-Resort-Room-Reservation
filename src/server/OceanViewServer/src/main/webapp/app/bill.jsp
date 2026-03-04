@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" language="java" %>
+<%@ page import="java.util.*" %>
 <%@ page import="com.oceanview.model.ReservationDetails" %>
 <%@ page import="com.oceanview.model.Bill" %>
 
@@ -8,7 +9,7 @@
     <title>Bill</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; background: #f7f7f7; }
-        .card { background: #fff; padding: 24px; border-radius: 10px; border: 1px solid #ddd; max-width: 950px;
+        .card { background: #fff; padding: 24px; border-radius: 10px; border: 1px solid #ddd; max-width: 1050px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .row { margin: 10px 0; }
         .label { display:inline-block; width: 220px; font-weight: bold; }
@@ -21,6 +22,9 @@
         .pill { display:inline-block; padding:4px 10px; border-radius:999px; border:1px solid #ddd; font-size:12px; }
         .box { border:1px solid #eee; border-radius:10px; padding:14px; margin-top:16px; background:#fafafa; }
         select, input { padding: 8px; border-radius: 8px; border: 1px solid #ccc; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #fafafa; }
     </style>
 </head>
 <body>
@@ -29,18 +33,38 @@
     <h1>Bill</h1>
 
     <%
-        String error = (String) request.getAttribute("error");
+        Object errObj = request.getAttribute("error");
+        String error = errObj == null ? null : String.valueOf(errObj);
+
         ReservationDetails d = (ReservationDetails) request.getAttribute("details");
         Bill bill = (Bill) request.getAttribute("bill");
 
-        String paid = request.getParameter("paid");
-        String errorParam = request.getParameter("error");
+        boolean dashboardMode = false;
+        Object dm = request.getAttribute("dashboardMode");
+        if (dm instanceof Boolean) dashboardMode = (Boolean) dm;
 
-        boolean showOk = "1".equals(paid);
+        List todaysPayments = (List) request.getAttribute("todaysPayments");
+        List todaysUnpaid = (List) request.getAttribute("todaysUnpaid");
+
+        String paid = request.getParameter("paid");
+        String toast = request.getParameter("toast");
+        String errorParam = request.getParameter("error");
     %>
 
-    <% if (showOk) { %>
+    <% if ("1".equals(paid)) { %>
     <div class="ok">Payment recorded successfully.</div>
+    <% } %>
+
+    <% if ("paymentRequired".equals(toast)) { %>
+    <div class="error">Payment required before Check-out</div>
+    <% } %>
+
+    <% if ("paidSuccess".equals(toast)) { %>
+    <div class="ok">Paid successfully.</div>
+    <% } %>
+
+    <% if ("advancePayRequired".equals(toast)) { %>
+    <div class="error">Advance payment required: please pay at least 20% to confirm reservation.</div>
     <% } %>
 
     <% if (errorParam != null && !errorParam.isBlank()) { %>
@@ -49,10 +73,88 @@
 
     <% if (error != null) { %>
     <div class="error"><%= error %></div>
-    <a class="btn" href="<%= request.getContextPath() %>/app/home.jsp">Back to Home</a>
     <% } %>
 
-    <% if (d != null && bill != null) { %>
+    <% if (dashboardMode) { %>
+
+    <h2>Today’s Payments</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Payment ID</th>
+            <th>Bill ID</th>
+            <th>Amount</th>
+            <th>Method</th>
+            <th>Time</th>
+        </tr>
+        </thead>
+        <tbody>
+        <%
+            if (todaysPayments != null && !todaysPayments.isEmpty()) {
+                for (Object o : todaysPayments) {
+                    String[] p = (String[]) o;
+        %>
+        <tr>
+            <td><%= p[0] %></td>
+            <td><%= p[1] %></td>
+            <td><%= p[2] %></td>
+            <td><%= p[3] %></td>
+            <td><%= p[4] %></td>
+        </tr>
+        <%
+            }
+        } else {
+        %>
+        <tr><td colspan="5">No payments today.</td></tr>
+        <% } %>
+        </tbody>
+    </table>
+
+    <h2 style="margin-top:18px;">Unpaid / Partial Reservations</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Reservation ID</th>
+            <th>Code</th>
+            <th>Status</th>
+            <th>Room</th>
+            <th>Bill Status</th>
+            <th>Balance</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <%
+            if (todaysUnpaid != null && !todaysUnpaid.isEmpty()) {
+                for (Object o : todaysUnpaid) {
+                    String[] u = (String[]) o;
+        %>
+        <tr>
+            <td><%= u[0] %></td>
+            <td><%= u[1] %></td>
+            <td><%= u[2] %></td>
+            <td><%= (u[3] == null ? "-" : u[3]) %></td>
+            <td><%= u[4] %></td>
+            <td><%= u[5] %></td>
+            <td>
+                <a class="btn" style="padding:6px 10px;" href="<%= request.getContextPath() %>/bills/view?reservationId=<%= u[0] %>">Open Bill</a>
+            </td>
+        </tr>
+        <%
+            }
+        } else {
+        %>
+        <tr><td colspan="7">No unpaid reservations.</td></tr>
+        <% } %>
+        </tbody>
+    </table>
+
+    <div style="margin-top:16px;">
+        <a class="btn" href="<%= request.getContextPath() %>/app/home.jsp">Back to Home</a>
+    </div>
+
+    <% } else if (d != null && bill != null) { %>
+
     <h2>Reservation</h2>
     <div class="row"><span class="label">Reservation ID:</span> <%= d.getReservationId() %></div>
     <div class="row"><span class="label">Code:</span> <%= d.getReservationCode() %></div>
@@ -117,9 +219,16 @@
 
     <div style="margin-top:16px;">
         <a class="btn" href="<%= request.getContextPath() %>/reservations/view?id=<%= d.getReservationId() %>">Back to Reservation</a>
+        <a class="btn" href="<%= request.getContextPath() %>/bills/view">Billing Dashboard</a>
         <a class="btn" href="<%= request.getContextPath() %>/app/home.jsp">Back to Home</a>
     </div>
+
+    <% } else { %>
+    <div class="error">Open a bill using a Reservation ID, or view the dashboard.</div>
+    <a class="btn" href="<%= request.getContextPath() %>/bills/view">Billing Dashboard</a>
+    <a class="btn" href="<%= request.getContextPath() %>/app/home.jsp">Back to Home</a>
     <% } %>
+
 </div>
 
 </body>

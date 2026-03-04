@@ -21,20 +21,26 @@ public class GuestDAOImpl implements GuestDAO {
             ps.setString(1, nicPassport);
 
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    Guest guest = new Guest();
-                    guest.setGuestId(rs.getInt("guest_id"));
-                    guest.setFirstName(rs.getString("first_name"));
-                    guest.setLastName(rs.getString("last_name"));
-                    guest.setNicPassport(rs.getString("nic_passport"));
-                    guest.setPhone(rs.getString("phone"));
-                    guest.setEmail(rs.getString("email"));
-                    guest.setAddress(rs.getString("address"));
-                    return guest;
-                }
+                if (rs.next()) return map(rs);
             }
         }
+        return null;
+    }
 
+    @Override
+    public Guest findById(int guestId) throws Exception {
+        String sql = "SELECT guest_id, first_name, last_name, nic_passport, phone, email, address " +
+                "FROM guests WHERE guest_id = ?";
+
+        try (Connection con = DbUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, guestId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return map(rs);
+            }
+        }
         return null;
     }
 
@@ -56,12 +62,22 @@ public class GuestDAOImpl implements GuestDAO {
             ps.executeUpdate();
 
             try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+                if (rs.next()) return rs.getInt(1);
             }
         }
 
         throw new Exception("Failed to insert guest.");
+    }
+
+    private Guest map(ResultSet rs) throws Exception {
+        Guest g = new Guest();
+        g.setGuestId(rs.getInt("guest_id"));
+        g.setFirstName(rs.getString("first_name"));
+        g.setLastName(rs.getString("last_name"));
+        g.setNicPassport(rs.getString("nic_passport"));
+        g.setPhone(rs.getString("phone"));
+        g.setEmail(rs.getString("email"));
+        g.setAddress(rs.getString("address"));
+        return g;
     }
 }

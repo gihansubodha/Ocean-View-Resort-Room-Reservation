@@ -18,7 +18,7 @@ public class CancelReservationServlet extends HttpServlet {
         try {
             int id = Integer.parseInt(req.getParameter("id"));
             reservationService.cancel(id);
-            resp.sendRedirect(req.getContextPath() + "/reservations/view?id=" + id + "&cancelled=1");
+            resp.sendRedirect(req.getContextPath() + "/reservations/view?id=" + id + "&toast=cancelled");
         } catch (Exception e) {
             resp.sendRedirect(req.getContextPath() + "/reservations/view?id=" + req.getParameter("id") + "&error=" + url(e.getMessage()));
         }

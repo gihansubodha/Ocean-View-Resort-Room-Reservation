@@ -1,16 +1,7 @@
 package com.oceanview.web;
 
-import com.oceanview.dao.GuestDAO;
-import com.oceanview.dao.GuestDAOImpl;
-import com.oceanview.dao.ReservationDAOImpl;
-import com.oceanview.dao.RoomDAO;
-import com.oceanview.dao.RoomDAOImpl;
-import com.oceanview.dao.RoomTypeDAO;
-import com.oceanview.dao.RoomTypeDAOImpl;
-import com.oceanview.model.Guest;
-import com.oceanview.model.Reservation;
-import com.oceanview.model.Room;
-import com.oceanview.model.RoomType;
+import com.oceanview.dao.*;
+import com.oceanview.model.*;
 import com.oceanview.service.ReservationService;
 
 import javax.servlet.ServletException;
@@ -61,7 +52,7 @@ public class AddReservationServlet extends HttpServlet {
             Guest guest = new Guest();
             guest.setFirstName(request.getParameter("firstName"));
             guest.setLastName(request.getParameter("lastName"));
-            guest.setNicPassport(request.getParameter("nicPassport")); // single stored value used for verification
+            guest.setNicPassport(request.getParameter("nicPassport"));
             guest.setPhone(request.getParameter("phone"));
             guest.setEmail(request.getParameter("email"));
             guest.setAddress(request.getParameter("address"));
@@ -81,10 +72,9 @@ public class AddReservationServlet extends HttpServlet {
             reservation.setCheckOut(LocalDate.parse(request.getParameter("checkOut")));
             reservation.setNumGuests(Integer.parseInt(request.getParameter("numGuests")));
             reservation.setSpecialRequests(request.getParameter("specialRequests"));
-
             reservation.setReservationCode(generateReservationCode());
 
-            // PENDING (not confirmed )
+            // Unconfirmed state
             reservation.setStatus("PENDING");
 
             HttpSession session = request.getSession(false);
@@ -96,14 +86,13 @@ public class AddReservationServlet extends HttpServlet {
 
             int reservationId = reservationService.createReservation(reservation);
 
-            //Generate bill immediately (still OK even if unconfirmed)
+            // Bill is generated on create (even if unconfirmed)
             reservationService.generateBill(reservationId);
 
-            // ✅ IMPORTANT: Do NOT reserve room here anymore.
-            // Room remains AVAILABLE until confirmed.
-
+            // where NOT to reserve room
             response.sendRedirect(request.getContextPath()
-                    + "/reservations/view?id=" + reservationId + "&created=1");
+                    + "/reservations/view?id=" + reservationId
+                    + "&created=1");
 
         } catch (Exception e) {
             request.setAttribute("error", e.getMessage());

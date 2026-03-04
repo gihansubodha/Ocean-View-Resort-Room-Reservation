@@ -1,13 +1,6 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: gihan
-  Date: 03/02/26
-  Time: 01:32
-  To change this template use File | Settings | File Templates.
---%>
 <%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" language="java" %>
-<%@ page import="com.oceanview.model.ReservationDetails" %>
 <%@ page import="java.util.List" %>
+<%@ page import="com.oceanview.model.ReservationDetails" %>
 
 <!DOCTYPE html>
 <html>
@@ -15,32 +8,59 @@
     <title>Reservation Details</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; background: #f7f7f7; }
-        .card { background: #fff; padding: 24px; border-radius: 8px; border: 1px solid #ddd; max-width: 980px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .error { color: #b00020; font-weight: bold; margin: 14px 0; }
-        .row { margin-bottom: 10px; }
-        .label { display:inline-block; width: 220px; font-weight: bold; }
-        .btn { padding: 10px 16px; border: 1px solid #333; background: #fff; cursor: pointer; border-radius: 6px;
-            text-decoration: none; color: #333; display: inline-block; margin-right: 10px; }
-        .btn:hover { background: #333; color: #fff; }
-        input { padding: 8px; width: 220px; }
-        .section-title { margin-top: 18px; }
-        .muted { color:#666; font-size: 0.95em; }
-
-        /* Toast */
-        .toast {
-            position: fixed; top: 18px; right: 18px; width: 360px;
-            background: #ffffff; border: 1px solid #ddd; border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            padding: 14px 14px 12px; display:none; z-index: 9999;
+        .card {
+            background: #fff;
+            padding: 24px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            max-width: 1100px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
-        .toast h3 { margin: 0 0 8px; font-size: 16px; }
-        .toast .line { margin: 4px 0; font-size: 13px; color:#333; }
-        .toast .close { float:right; border:none; background:transparent; cursor:pointer; font-size: 16px; }
+        .row { margin: 10px 0; }
+        .label { display:inline-block; width: 180px; font-weight: bold; }
+        .btn {
+            padding: 10px 16px;
+            border: 1px solid #333;
+            background: #fff;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #333;
+            display: inline-block;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        .btn:hover { background: #333; color: #fff; }
+        .error { color: #b00020; font-weight: bold; margin: 14px 0; }
+        .muted { color:#666; margin-top:6px; }
+        .section-title { margin-top: 22px; }
+        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 8px; }
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            min-width: 320px;
+            background: #fff;
+            color: #111;
+            border-radius: 12px;
+            padding: 18px 20px;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+            display: none;
+            z-index: 9999;
+            border: 1px solid #ddd;
+        }
+        .toast h3 { margin: 0 0 8px 0; font-size: 18px; }
+        .toast .line { margin: 4px 0; font-size: 14px; }
+        .toast .close {
+            float: right;
+            background: transparent;
+            border: none;
+            color: #111;
+            font-size: 18px;
+            cursor: pointer;
+        }
         .grid { display:flex; flex-wrap:wrap; gap:10px; }
         .grid .field { display:flex; flex-direction:column; }
         .grid input { width: 220px; }
-
         table { width: 100%; border-collapse: collapse; margin-top: 12px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
         th { background: #fafafa; }
@@ -50,11 +70,16 @@
 
 <%
     String error = (String) request.getAttribute("error");
+    if (error == null || error.trim().isEmpty()) {
+        error = request.getParameter("error");
+    }
+
     ReservationDetails d = (ReservationDetails) request.getAttribute("details");
     List<ReservationDetails> results = (List<ReservationDetails>) request.getAttribute("results");
     String resultsTitle = (String) request.getAttribute("resultsTitle");
 
     boolean created = "1".equals(request.getParameter("created"));
+    String toastParam = request.getParameter("toast");
 %>
 
 <div class="toast" id="toast">
@@ -126,11 +151,10 @@
         </div>
     </form>
 
-    <% if (error != null) { %>
+    <% if (error != null && !error.trim().isEmpty()) { %>
     <div class="error"><%= error %></div>
     <% } %>
 
-    <%-- Results list --%>
     <% if (results != null && !results.isEmpty()) { %>
     <h2 class="section-title"><%= (resultsTitle != null ? resultsTitle : "Search Results") %></h2>
     <table>
@@ -165,7 +189,6 @@
     </table>
     <% } %>
 
-    <%-- Single details view --%>
     <% if (d != null) { %>
     <h2 class="section-title">Booking</h2>
 
@@ -192,29 +215,37 @@
     <div style="margin-top:16px;">
         <a class="btn" href="<%= request.getContextPath() %>/bills/view?reservationId=<%= d.getReservationId() %>">View Bill</a>
 
+        <% if ("PENDING".equalsIgnoreCase(d.getReservationStatus())) { %>
         <form method="post" action="<%= request.getContextPath() %>/reservations/confirm" style="display:inline;">
             <input type="hidden" name="id" value="<%= d.getReservationId() %>"/>
             <button class="btn" type="submit">Confirm</button>
         </form>
+        <% } %>
 
-        <form method="post" action="<%= request.getContextPath() %>/reservations/cancel" style="display:inline;">
+        <% if (!"CHECKED_OUT".equalsIgnoreCase(d.getReservationStatus()) && !"CANCELLED".equalsIgnoreCase(d.getReservationStatus())) { %>
+        <form method="post" action="<%= request.getContextPath() %>/reservations/cancel" style="display:inline;" onsubmit="return confirmCancelReservation();">
             <input type="hidden" name="id" value="<%= d.getReservationId() %>"/>
             <button class="btn" type="submit">Cancel</button>
         </form>
+        <% } %>
 
+        <% if ("CONFIRMED".equalsIgnoreCase(d.getReservationStatus())) { %>
         <form method="post" action="<%= request.getContextPath() %>/reservations/checkin" style="display:inline;">
             <input type="hidden" name="id" value="<%= d.getReservationId() %>"/>
             <button class="btn" type="submit">Check-in</button>
         </form>
+        <% } %>
 
-        <form method="post" action="<%= request.getContextPath() %>/reservations/checkout" style="display:inline;">
+        <% if ("CHECKED_IN".equalsIgnoreCase(d.getReservationStatus())) { %>
+        <form method="post" action="<%= request.getContextPath() %>/reservations/checkout" style="display:inline;" onsubmit="return confirmCheckOut();">
             <input type="hidden" name="id" value="<%= d.getReservationId() %>"/>
             <button class="btn" type="submit">Check-out</button>
         </form>
+        <% } %>
     </div>
     <% } %>
 
-</div> <%-- closes .card --%>
+</div>
 
 <script>
     function showToast() {
@@ -222,13 +253,57 @@
         toast.style.display = "block";
         setTimeout(hideToast, 7000);
     }
+
     function hideToast() {
-        const toast = document.getElementById("toast");
-        toast.style.display = "none";
+        document.getElementById("toast").style.display = "none";
+    }
+
+    function showActionToast(title, msg) {
+        const t = document.getElementById("actionToast");
+        document.getElementById("actionTitle").innerText = title;
+        document.getElementById("actionMsg").innerText = msg;
+        t.style.display = "block";
+        setTimeout(hideActionToast, 6000);
+    }
+
+    function hideActionToast() {
+        document.getElementById("actionToast").style.display = "none";
+    }
+
+    function confirmCancelReservation() {
+        return confirm("Do you want to cancel the reservation?");
+    }
+
+    function confirmCheckOut() {
+        return confirm("Do you want to check out?");
     }
 
     (function() {
         const created = <%= created ? "true" : "false" %>;
+        const toastParam = "<%= toastParam == null ? "" : toastParam %>";
+
+        if (toastParam === "confirmed") {
+            showActionToast("Reservation Confirmed", "Reservation confirmed successfully.");
+        }
+        if (toastParam === "cancelled") {
+            showActionToast("Reservation Cancelled", "Reservation cancelled successfully.");
+        }
+        if (toastParam === "checkedin") {
+            showActionToast("Checked-in", "Guest checked in successfully.");
+        }
+        if (toastParam === "checkedout") {
+            showActionToast("Checked-out", "Guest checked out successfully.");
+        }
+        if (toastParam === "confirmFirst") {
+            showActionToast("Check-in Blocked", "Confirm the reservation first");
+        }
+        if (toastParam === "invalidDocument") {
+            showActionToast("Verification Failed", "Enter correct document number!");
+        }
+        if (toastParam === "advanceRequired") {
+            showActionToast("Advance payment is required", "Please verify ID or pay 20% advance.");
+        }
+
         if (!created) return;
 
         const code = document.getElementById("vCode") ? document.getElementById("vCode").innerText : "";
