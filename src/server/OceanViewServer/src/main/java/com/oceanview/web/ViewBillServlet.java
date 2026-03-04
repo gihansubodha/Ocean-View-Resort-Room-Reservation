@@ -1,6 +1,9 @@
 package com.oceanview.web;
 
+import com.oceanview.dao.BillDAO;
+import com.oceanview.dao.BillDAOImpl;
 import com.oceanview.dao.ReservationDAOImpl;
+import com.oceanview.model.Bill;
 import com.oceanview.model.ReservationDetails;
 
 import javax.servlet.ServletException;
@@ -9,12 +12,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.time.temporal.ChronoUnit;
 
 @WebServlet("/bills/view")
 public class ViewBillServlet extends HttpServlet {
 
     private final ReservationDAOImpl reservationDAO = new ReservationDAOImpl();
+    private final BillDAO billDAO = new BillDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -37,15 +40,18 @@ public class ViewBillServlet extends HttpServlet {
                 return;
             }
 
-            long nights = ChronoUnit.DAYS.between(d.getCheckIn(), d.getCheckOut());
-            if (nights < 1) nights = 1; // safety
+            //  Generate / re-generate bill using SP (includes tax + discount rules)
+            billDAO.generateBill(reservationId);
 
-            double nightlyRate = d.getNightlyRate();
-            double total = nightlyRate * nights;
+            Bill bill = billDAO.findByReservationId(reservationId);
+            if (bill == null) {
+                request.setAttribute("error", "Bill not found for reservation ID: " + reservationId);
+                request.getRequestDispatcher("/app/bill.jsp").forward(request, response);
+                return;
+            }
 
             request.setAttribute("details", d);
-            request.setAttribute("nights", nights);
-            request.setAttribute("total", total);
+            request.setAttribute("bill", bill);
 
             request.getRequestDispatcher("/app/bill.jsp").forward(request, response);
 

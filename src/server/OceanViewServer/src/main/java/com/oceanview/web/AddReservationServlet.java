@@ -15,10 +15,7 @@ import com.oceanview.service.ReservationService;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.*;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -61,19 +58,16 @@ public class AddReservationServlet extends HttpServlet {
             throws ServletException, IOException {
 
         try {
-            // 1) Build guest
             Guest guest = new Guest();
             guest.setFirstName(request.getParameter("firstName"));
             guest.setLastName(request.getParameter("lastName"));
-            guest.setNicPassport(request.getParameter("nicPassport"));
+            guest.setNicPassport(request.getParameter("nicPassport")); // single stored value used for verification
             guest.setPhone(request.getParameter("phone"));
             guest.setEmail(request.getParameter("email"));
             guest.setAddress(request.getParameter("address"));
 
-            // 2) Resolve guest id
             int guestId = resolveGuestId(guest);
 
-            // 3) Build reservation
             Reservation reservation = new Reservation();
             reservation.setGuestId(guestId);
             reservation.setRoomTypeId(Integer.parseInt(request.getParameter("roomTypeId")));
@@ -89,38 +83,32 @@ public class AddReservationServlet extends HttpServlet {
             reservation.setSpecialRequests(request.getParameter("specialRequests"));
 
             reservation.setReservationCode(generateReservationCode());
-            reservation.setStatus("CONFIRMED");
+
+            // PENDING (not confirmed )
+            reservation.setStatus("PENDING");
 
             HttpSession session = request.getSession(false);
             if (session != null && session.getAttribute("userId") != null) {
                 Object userIdObj = session.getAttribute("userId");
-                if (userIdObj instanceof Integer) {
-                    reservation.setCreatedBy((Integer) userIdObj);
-                } else {
-                    reservation.setCreatedBy(Integer.parseInt(String.valueOf(userIdObj)));
-                }
+                if (userIdObj instanceof Integer) reservation.setCreatedBy((Integer) userIdObj);
+                else reservation.setCreatedBy(Integer.parseInt(String.valueOf(userIdObj)));
             }
 
-            // 4) Create reservation
             int reservationId = reservationService.createReservation(reservation);
 
-            // 5) Update room status if selected
-            if (reservation.getRoomId() != null) {
-                roomDAO.updateStatus(reservation.getRoomId(), "RESERVED");
-            }
+            //Generate bill immediately (still OK even if unconfirmed)
+            reservationService.generateBill(reservationId);
 
-            // PRG Redirect to details page + created flag
-            String url = request.getContextPath()
-                    + "/reservations/view?id=" + reservationId
-                    + "&created=1";
-            response.sendRedirect(url);
+            // ✅ IMPORTANT: Do NOT reserve room here anymore.
+            // Room remains AVAILABLE until confirmed.
+
+            response.sendRedirect(request.getContextPath()
+                    + "/reservations/view?id=" + reservationId + "&created=1");
 
         } catch (Exception e) {
             request.setAttribute("error", e.getMessage());
-
             try {
                 loadFormData(request);
-
                 String roomTypeIdParam = request.getParameter("roomTypeId");
                 if (roomTypeIdParam != null && !roomTypeIdParam.isBlank()) {
                     int roomTypeId = Integer.parseInt(roomTypeIdParam);

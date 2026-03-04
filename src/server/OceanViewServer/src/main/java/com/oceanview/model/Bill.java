@@ -12,6 +12,11 @@ public class Bill {
     private BigDecimal taxAmount;
     private BigDecimal total;
 
+    // ✅ NEW fields for payment summary (won’t break old code)
+    private BigDecimal paidTotal;
+    private BigDecimal balance;
+    private String billStatus;
+
     public Bill() {
     }
 
@@ -77,5 +82,30 @@ public class Bill {
 
     public void setTotal(BigDecimal total) {
         this.total = total;
+    }
+
+    // ✅ NEW getters/setters
+    public BigDecimal getPaidTotal() {
+        return paidTotal;
+    }
+
+    public void setPaidTotal(BigDecimal paidTotal) {
+        this.paidTotal = paidTotal;
+    }
+
+    public BigDecimal getBalance() {
+        return balance;
+    }
+
+    public void setBalance(BigDecimal balance) {
+        this.balance = balance;
+    }
+
+    public String getBillStatus() {
+        return billStatus;
+    }
+
+    public void setBillStatus(String billStatus) {
+        this.billStatus = billStatus;
     }
 }

@@ -12,6 +12,9 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Types;
 
 public class ReservationDAOImpl implements ReservationDAO {
 
@@ -304,5 +307,57 @@ public class ReservationDAOImpl implements ReservationDAO {
         d.setNightlyRate(rs.getDouble("nightly_rate"));
 
         return d;
+    }
+    @Override
+    public void updateStatus(int reservationId, String status) throws Exception {
+        String sql = "UPDATE reservations SET status = ? WHERE reservation_id = ?";
+        try (Connection con = DbUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2, reservationId);
+            ps.executeUpdate();
+        }
+    }
+
+    @Override
+    public Integer findRoomId(int reservationId) throws Exception {
+        String sql = "SELECT room_id FROM reservations WHERE reservation_id = ?";
+        try (Connection con = DbUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, reservationId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int rid = rs.getInt("room_id");
+                    return rs.wasNull() ? null : rid;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void updateReservation(Reservation reservation) throws Exception {
+        String sql = "UPDATE reservations SET room_type_id=?, room_id=?, check_in=?, check_out=?, num_guests=?, " +
+                "status=?, special_requests=? WHERE reservation_id=?";
+        try (Connection con = DbUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, reservation.getRoomTypeId());
+
+            if (reservation.getRoomId() == null) {
+                ps.setNull(2, Types.INTEGER);
+            } else {
+                ps.setInt(2, reservation.getRoomId());
+            }
+
+            ps.setDate(3, Date.valueOf(reservation.getCheckIn()));
+            ps.setDate(4, Date.valueOf(reservation.getCheckOut()));
+            ps.setInt(5, reservation.getNumGuests());
+            ps.setString(6, reservation.getStatus());
+            ps.setString(7, reservation.getSpecialRequests());
+            ps.setInt(8, reservation.getReservationId());
+
+            ps.executeUpdate();
+        }
     }
 }

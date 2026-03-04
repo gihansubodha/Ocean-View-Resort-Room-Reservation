@@ -65,6 +65,12 @@
     <div class="line" id="tDates"></div>
 </div>
 
+<div class="toast" id="actionToast" style="display:none;">
+    <button class="close" onclick="hideActionToast()">×</button>
+    <h3 id="actionTitle">Done</h3>
+    <div class="line" id="actionMsg"></div>
+</div>
+
 <div class="card">
     <h1>Reservation Details</h1>
     <div class="muted">Search by Reservation ID, Code, NIC/Passport, Phone, Email, Room number, check-in date range — or use Today’s lists.</div>
@@ -185,9 +191,30 @@
 
     <div style="margin-top:16px;">
         <a class="btn" href="<%= request.getContextPath() %>/bills/view?reservationId=<%= d.getReservationId() %>">View Bill</a>
+
+        <form method="post" action="<%= request.getContextPath() %>/reservations/confirm" style="display:inline;">
+            <input type="hidden" name="id" value="<%= d.getReservationId() %>"/>
+            <button class="btn" type="submit">Confirm</button>
+        </form>
+
+        <form method="post" action="<%= request.getContextPath() %>/reservations/cancel" style="display:inline;">
+            <input type="hidden" name="id" value="<%= d.getReservationId() %>"/>
+            <button class="btn" type="submit">Cancel</button>
+        </form>
+
+        <form method="post" action="<%= request.getContextPath() %>/reservations/checkin" style="display:inline;">
+            <input type="hidden" name="id" value="<%= d.getReservationId() %>"/>
+            <button class="btn" type="submit">Check-in</button>
+        </form>
+
+        <form method="post" action="<%= request.getContextPath() %>/reservations/checkout" style="display:inline;">
+            <input type="hidden" name="id" value="<%= d.getReservationId() %>"/>
+            <button class="btn" type="submit">Check-out</button>
+        </form>
     </div>
     <% } %>
-</div>
+
+</div> <%-- closes .card --%>
 
 <script>
     function showToast() {
