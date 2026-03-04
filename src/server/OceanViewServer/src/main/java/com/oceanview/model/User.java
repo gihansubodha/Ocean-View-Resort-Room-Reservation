@@ -6,7 +6,7 @@ public class User {
     private int userId;
     private String username;
     private String passwordHash; // stored as salt:hash
-    private String role;         // ADMIN or RECEPTIONIST
+    private String role;         // Admin or staff
     private boolean active;
     private Timestamp createdAt;
 

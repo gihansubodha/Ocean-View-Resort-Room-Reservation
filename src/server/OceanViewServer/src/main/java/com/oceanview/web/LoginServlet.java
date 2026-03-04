@@ -22,26 +22,46 @@ public class LoginServlet extends HttpServlet {
     }
 
     @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        // show login page
+        req.getRequestDispatcher("/login.jsp").forward(req, resp);
+    }
+
+    @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        String username = req.getParameter("username");
-        String password = req.getParameter("password");
+        String username = safe(req.getParameter("username"));
+        String password = safe(req.getParameter("password"));
 
         try {
             User user = authService.authenticate(username, password);
+
             if (user != null) {
                 HttpSession session = req.getSession(true);
                 session.setAttribute("authUser", user);
+                session.setAttribute("role", user.getRole()); // helpful for filters/menus
                 session.setMaxInactiveInterval(15 * 60); // 15 mins
 
-                resp.sendRedirect(req.getContextPath() + "/app/home.jsp");
-            } else {
-                req.setAttribute("error", "Invalid username/password or inactive user.");
-                req.getRequestDispatcher("/login.jsp").forward(req, resp);
+                // Role-based redirect
+                if ("ADMIN".equalsIgnoreCase(user.getRole())) {
+                    resp.sendRedirect(req.getContextPath() + "/admin/dashboard");
+                } else {
+                    resp.sendRedirect(req.getContextPath() + "/app/home.jsp");
+                }
+                return;
             }
+
+            req.setAttribute("error", "Invalid username/password or inactive user.");
+            req.getRequestDispatcher("/login.jsp").forward(req, resp);
+
         } catch (Exception e) {
             throw new ServletException(e);
         }
+    }
+
+    private String safe(String s) {
+        return (s == null) ? "" : s.trim();
     }
 }

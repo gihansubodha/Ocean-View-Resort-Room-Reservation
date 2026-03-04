@@ -14,306 +14,218 @@
 <html>
 <head>
     <title>Add Reservation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- NEW UI -->
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/assets/ui.css">
     <style>
-        :root{
-            --bg: #f6f7fb;
-            --card: #ffffff;
-            --text: #1f2937;
-            --muted: #6b7280;
-            --border: #e5e7eb;
-            --shadow: rgba(0,0,0,0.08);
-
-            /* Change these two to match your home page colors if needed */
-            --primary: #111827;
-            --primaryHover: #000000;
-        }
-
-        * { box-sizing: border-box; }
-
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background: var(--bg);
-            color: var(--text);
-        }
-
-        .page-wrap{
-            min-height: 100vh;
-            padding: 20px 14px;
-        }
-
-        .card {
-            background: var(--card);
-            padding: 22px;
-            border-radius: 14px;
-            border: 1px solid var(--border);
-            max-width: 1100px;
-            margin: 0 auto;
-            box-shadow: 0 10px 30px var(--shadow);
-        }
-
-        .header{
-            display:flex;
-            align-items:flex-start;
-            justify-content:space-between;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 14px;
-        }
-
-        h1 { margin: 0; font-size: 26px; }
-        .subtitle { margin: 6px 0 0; color: var(--muted); }
-
-        .msg {
-            margin: 12px 0 16px;
-            padding: 10px 12px;
-            border-radius: 10px;
-            font-weight: 700;
-        }
-        .error { background: #ffe5e7; color: #8a0010; border: 1px solid #ffb3bb; }
-        .success { background: #e8fff1; color: #006b2d; border: 1px solid #a7f3c4; }
-
-        .form-grid{
-            display:grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px 20px;
-            margin-top: 10px;
-        }
-
-        .field label{
-            display:block;
-            margin-bottom: 6px;
-            font-weight: 700;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            outline: none;
-            background: #fff;
-        }
-
-        input:focus, select:focus, textarea:focus{
-            border-color: #c7cdd8;
-            box-shadow: 0 0 0 3px rgba(17,24,39,0.08);
-        }
-
-        textarea { height: 92px; resize: vertical; }
-
-        .span-2 { grid-column: 1 / -1; }
-
-        .note {
-            color: var(--muted);
-            font-size: 13px;
-            margin-top: 6px;
-        }
-
+        /* Page-specific (no logic changes) */
         .actions{
-            margin-top: 16px;
+            margin-top: 14px;
             display:flex;
             gap: 10px;
             flex-wrap: wrap;
         }
 
-        .btn {
-            padding: 10px 14px;
-            border: 1px solid var(--primary);
-            background: #fff;
-            cursor: pointer;
-            border-radius: 10px;
-            text-decoration: none;
-            color: var(--primary);
-            display: inline-block;
+        /* Keep your JS-driven preserve behavior but make fields look consistent */
+        .field label{
+            display:block;
+            margin-bottom: 6px;
             font-weight: 700;
+            color: var(--muted);
+            font-size: 13px;
         }
 
-        .btn-primary{
-            background: var(--primary);
-            color: #fff;
+        .note {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 6px;
+            line-height: 1.5;
         }
-
-        .btn:hover { opacity: 0.92; }
-        .btn-primary:hover { background: var(--primaryHover); }
 
         .bill-box {
-            margin-top: 18px;
-            padding: 16px;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            background: #fafafa;
+            margin-top: 16px;
         }
-
-        .bill-row { margin-bottom: 8px; }
-
-        @media (max-width: 900px){
-            .form-grid{ grid-template-columns: 1fr; }
-            .span-2{ grid-column: auto; }
-        }
+        .bill-row { margin: 8px 0; color: var(--text); font-size: 13px; }
     </style>
 </head>
 
 <body>
-<div class="page-wrap">
-    <div class="card">
-        <div class="header">
-            <div>
-                <h1>Add Reservation</h1>
-                <div class="subtitle">Create a new reservation for a guest.</div>
+<div class="app-shell">
+    <div class="container">
+
+        <!-- Top bar (consistent UI) -->
+        <div class="topbar">
+            <div class="brand">
+                <div class="logo"></div>
+                <div>
+                    <h1>Ocean View Resort</h1>
+                    <div class="sub">Create Reservation</div>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <a class="btn btn-soft" href="<%= request.getContextPath() %>/app/home.jsp">Home</a>
+                <a class="btn btn-danger" href="<%= request.getContextPath() %>/logout">Logout</a>
             </div>
         </div>
 
-        <%
-            String error = (String) request.getAttribute("error");
-            String success = (String) request.getAttribute("success");
-            Bill generatedBill = (Bill) request.getAttribute("generatedBill");
+        <div class="card card-pad">
+            <h2 class="page-title">Add Reservation</h2>
+            <div class="page-subtitle">Create a new reservation for a guest.</div>
 
-            String firstName = request.getParameter("firstName") != null ? request.getParameter("firstName") : "";
-            String lastName = request.getParameter("lastName") != null ? request.getParameter("lastName") : "";
-            String nicPassport = request.getParameter("nicPassport") != null ? request.getParameter("nicPassport") : "";
-            String phone = request.getParameter("phone") != null ? request.getParameter("phone") : "";
-            String email = request.getParameter("email") != null ? request.getParameter("email") : "";
-            String address = request.getParameter("address") != null ? request.getParameter("address") : "";
-            String checkIn = request.getParameter("checkIn") != null ? request.getParameter("checkIn") : "";
-            String checkOut = request.getParameter("checkOut") != null ? request.getParameter("checkOut") : "";
-            String numGuests = request.getParameter("numGuests") != null ? request.getParameter("numGuests") : "";
-            String specialRequests = request.getParameter("specialRequests") != null ? request.getParameter("specialRequests") : "";
-            String selectedRoomIdParam = request.getParameter("roomId") != null ? request.getParameter("roomId") : "";
-        %>
+            <%
+                String error = (String) request.getAttribute("error");
+                String success = (String) request.getAttribute("success");
+                Bill generatedBill = (Bill) request.getAttribute("generatedBill");
 
-        <% if (error != null) { %>
-        <div class="msg error"><%= error %></div>
-        <% } %>
+                String firstName = request.getParameter("firstName") != null ? request.getParameter("firstName") : "";
+                String lastName = request.getParameter("lastName") != null ? request.getParameter("lastName") : "";
+                String nicPassport = request.getParameter("nicPassport") != null ? request.getParameter("nicPassport") : "";
+                String phone = request.getParameter("phone") != null ? request.getParameter("phone") : "";
+                String email = request.getParameter("email") != null ? request.getParameter("email") : "";
+                String address = request.getParameter("address") != null ? request.getParameter("address") : "";
+                String checkIn = request.getParameter("checkIn") != null ? request.getParameter("checkIn") : "";
+                String checkOut = request.getParameter("checkOut") != null ? request.getParameter("checkOut") : "";
+                String numGuests = request.getParameter("numGuests") != null ? request.getParameter("numGuests") : "";
+                String specialRequests = request.getParameter("specialRequests") != null ? request.getParameter("specialRequests") : "";
+                String selectedRoomIdParam = request.getParameter("roomId") != null ? request.getParameter("roomId") : "";
+            %>
 
-        <% if (success != null) { %>
-        <div class="msg success"><%= success %></div>
-        <% } %>
+            <% if (error != null) { %>
+            <div class="alert alert-err" style="margin-top:12px;"><%= error %></div>
+            <% } %>
 
-        <form method="post" action="<%= request.getContextPath() %>/reservations/add">
+            <% if (success != null) { %>
+            <div class="alert alert-ok" style="margin-top:12px;"><%= success %></div>
+            <% } %>
 
-            <div class="form-grid">
+            <form method="post" action="<%= request.getContextPath() %>/reservations/add">
 
-                <div class="field">
-                    <label>First Name</label>
-                    <input type="text" name="firstName" value="<%= firstName %>" required>
+                <div class="section">
+                    <div class="form-grid">
+
+                        <div class="field">
+                            <label>First Name</label>
+                            <input type="text" name="firstName" value="<%= firstName %>" required>
+                        </div>
+
+                        <div class="field">
+                            <label>Last Name</label>
+                            <input type="text" name="lastName" value="<%= lastName %>" required>
+                        </div>
+
+                        <div class="field">
+                            <label>NIC / Passport</label>
+                            <input type="text" name="nicPassport" value="<%= nicPassport %>">
+                        </div>
+
+                        <div class="field">
+                            <label>Phone</label>
+                            <input type="text" name="phone" value="<%= phone %>" required>
+                        </div>
+
+                        <div class="field" style="grid-column: 1 / -1;">
+                            <label>Email</label>
+                            <input type="email" name="email" value="<%= email %>">
+                        </div>
+
+                        <div class="field" style="grid-column: 1 / -1;">
+                            <label>Address</label>
+                            <textarea name="address"><%= address %></textarea>
+                        </div>
+
+                        <div class="field">
+                            <label>Room Type</label>
+                            <select name="roomTypeId" id="roomTypeId" onchange="onRoomTypeChange()" required>
+                                <option value="">-- Select Room Type --</option>
+                                <%
+                                    List<RoomType> roomTypes = (List<RoomType>) request.getAttribute("roomTypes");
+                                    Object selectedRoomTypeId = request.getAttribute("selectedRoomTypeId");
+
+                                    if (selectedRoomTypeId == null && request.getParameter("roomTypeId") != null && !request.getParameter("roomTypeId").isBlank()) {
+                                        selectedRoomTypeId = request.getParameter("roomTypeId");
+                                    }
+
+                                    if (roomTypes != null) {
+                                        for (RoomType rt : roomTypes) {
+                                            boolean selected = selectedRoomTypeId != null &&
+                                                    Integer.parseInt(String.valueOf(selectedRoomTypeId)) == rt.getRoomTypeId();
+                                %>
+                                <option value="<%= rt.getRoomTypeId() %>" <%= selected ? "selected" : "" %>>
+                                    <%= rt.getTypeName() %> - LKR <%= rt.getNightlyRate() %>
+                                </option>
+                                <%
+                                        }
+                                    }
+                                %>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label>Available Room (Optional)</label>
+                            <select name="roomId" id="roomId">
+                                <option value="">-- Optional: Select Available Room --</option>
+                                <%
+                                    List<Room> availableRooms = (List<Room>) request.getAttribute("availableRooms");
+                                    if (availableRooms != null) {
+                                        for (Room room : availableRooms) {
+                                            boolean selectedRoom = selectedRoomIdParam != null &&
+                                                    !selectedRoomIdParam.isBlank() &&
+                                                    Integer.parseInt(selectedRoomIdParam) == room.getRoomId();
+                                %>
+                                <option value="<%= room.getRoomId() %>" <%= selectedRoom ? "selected" : "" %>>
+                                    <%= room.getRoomNumber() %>
+                                </option>
+                                <%
+                                        }
+                                    }
+                                %>
+                            </select>
+                            <div class="note">Room list changes when you select a room type.</div>
+                        </div>
+
+                        <div class="field">
+                            <label>Check-In Date</label>
+                            <input type="date" name="checkIn" value="<%= checkIn %>" required>
+                        </div>
+
+                        <div class="field">
+                            <label>Check-Out Date</label>
+                            <input type="date" name="checkOut" value="<%= checkOut %>" required>
+                        </div>
+
+                        <div class="field">
+                            <label>Number of Guests</label>
+                            <input type="number" name="numGuests" min="1" value="<%= numGuests %>" required>
+                        </div>
+
+                        <div class="field" style="grid-column: 1 / -1;">
+                            <label>Special Requests</label>
+                            <textarea name="specialRequests"><%= specialRequests %></textarea>
+                        </div>
+
+                    </div>
                 </div>
 
-                <div class="field">
-                    <label>Last Name</label>
-                    <input type="text" name="lastName" value="<%= lastName %>" required>
+                <div class="actions nav-actions" style="justify-content:flex-start;">
+                    <button class="btn btn-success" type="submit">Create Reservation</button>
+                    <a class="btn btn-soft" href="<%= request.getContextPath() %>/app/home.jsp">Back to Home</a>
                 </div>
+            </form>
 
-                <div class="field">
-                    <label>NIC / Passport</label>
-                    <input type="text" name="nicPassport" value="<%= nicPassport %>">
-                </div>
-
-                <div class="field">
-                    <label>Phone</label>
-                    <input type="text" name="phone" value="<%= phone %>" required>
-                </div>
-
-                <div class="field">
-                    <label>Email</label>
-                    <input type="email" name="email" value="<%= email %>">
-                </div>
-
-                <div class="field span-2">
-                    <label>Address</label>
-                    <textarea name="address"><%= address %></textarea>
-                </div>
-
-                <div class="field">
-                    <label>Room Type</label>
-                    <select name="roomTypeId" id="roomTypeId" onchange="onRoomTypeChange()" required>
-                        <option value="">-- Select Room Type --</option>
-                        <%
-                            List<RoomType> roomTypes = (List<RoomType>) request.getAttribute("roomTypes");
-                            Object selectedRoomTypeId = request.getAttribute("selectedRoomTypeId");
-
-                            if (selectedRoomTypeId == null && request.getParameter("roomTypeId") != null && !request.getParameter("roomTypeId").isBlank()) {
-                                selectedRoomTypeId = request.getParameter("roomTypeId");
-                            }
-
-                            if (roomTypes != null) {
-                                for (RoomType rt : roomTypes) {
-                                    boolean selected = selectedRoomTypeId != null &&
-                                            Integer.parseInt(String.valueOf(selectedRoomTypeId)) == rt.getRoomTypeId();
-                        %>
-                        <option value="<%= rt.getRoomTypeId() %>" <%= selected ? "selected" : "" %>>
-                            <%= rt.getTypeName() %> - LKR <%= rt.getNightlyRate() %>
-                        </option>
-                        <%
-                                }
-                            }
-                        %>
-                    </select>
-                </div>
-
-                <div class="field">
-                    <label>Available Room (Optional)</label>
-                    <select name="roomId" id="roomId">
-                        <option value="">-- Optional: Select Available Room --</option>
-                        <%
-                            List<Room> availableRooms = (List<Room>) request.getAttribute("availableRooms");
-                            if (availableRooms != null) {
-                                for (Room room : availableRooms) {
-                                    boolean selectedRoom = selectedRoomIdParam != null &&
-                                            !selectedRoomIdParam.isBlank() &&
-                                            Integer.parseInt(selectedRoomIdParam) == room.getRoomId();
-                        %>
-                        <option value="<%= room.getRoomId() %>" <%= selectedRoom ? "selected" : "" %>>
-                            <%= room.getRoomNumber() %>
-                        </option>
-                        <%
-                                }
-                            }
-                        %>
-                    </select>
-                    <div class="note">Room list changes when you select a room type.</div>
-                </div>
-
-                <div class="field">
-                    <label>Check-In Date</label>
-                    <input type="date" name="checkIn" value="<%= checkIn %>" required>
-                </div>
-
-                <div class="field">
-                    <label>Check-Out Date</label>
-                    <input type="date" name="checkOut" value="<%= checkOut %>" required>
-                </div>
-
-                <div class="field">
-                    <label>Number of Guests</label>
-                    <input type="number" name="numGuests" min="1" value="<%= numGuests %>" required>
-                </div>
-
-                <div class="field span-2">
-                    <label>Special Requests</label>
-                    <textarea name="specialRequests"><%= specialRequests %></textarea>
-                </div>
-
+            <% if (generatedBill != null) { %>
+            <div class="section bill-box">
+                <h3 style="margin:0 0 10px; font-size:16px;">Generated Bill</h3>
+                <div class="bill-row"><b>Reservation ID:</b> <%= generatedBill.getReservationId() %></div>
+                <div class="bill-row"><b>Subtotal:</b> LKR <%= generatedBill.getSubtotal() %></div>
+                <div class="bill-row"><b>Tax:</b> LKR <%= generatedBill.getTaxAmount() %></div>
+                <div class="bill-row"><b>Discount:</b> LKR <%= generatedBill.getDiscountAmount() %></div>
+                <div class="bill-row"><b>Total:</b> LKR <%= generatedBill.getTotal() %></div>
+                <div class="bill-row"><b>Status:</b> UNPAID</div>
             </div>
+            <% } %>
 
-            <div class="actions">
-                <button class="btn btn-primary" type="submit">Create Reservation</button>
-                <a class="btn" href="<%= request.getContextPath() %>/app/home.jsp">Back to Home</a>
-                <a class="btn" href="<%= request.getContextPath() %>/logout">Logout</a>
-            </div>
-        </form>
-
-        <% if (generatedBill != null) { %>
-        <div class="bill-box">
-            <h2 style="margin-top:0;">Generated Bill</h2>
-            <div class="bill-row"><strong>Reservation ID:</strong> <%= generatedBill.getReservationId() %></div>
-            <div class="bill-row"><strong>Subtotal:</strong> LKR <%= generatedBill.getSubtotal() %></div>
-            <div class="bill-row"><strong>Tax:</strong> LKR <%= generatedBill.getTaxAmount() %></div>
-            <div class="bill-row"><strong>Discount:</strong> LKR <%= generatedBill.getDiscountAmount() %></div>
-            <div class="bill-row"><strong>Total:</strong> LKR <%= generatedBill.getTotal() %></div>
-            <div class="bill-row"><strong>Status:</strong> UNPAID</div>
         </div>
-        <% } %>
 
     </div>
 </div>
