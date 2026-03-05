@@ -17,6 +17,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <title>Ocean View Resort - Admin Panel</title>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
@@ -156,6 +157,9 @@
         </div>
 
         <div class="actions">
+            <button type="button" class="btn btn-soft" onclick="history.back()">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </button>
             <div class="pill">Today: <strong><%= java.time.LocalDate.now() %></strong></div>
             <a class="btnLight" href="<%=request.getContextPath()%>/admin/dashboard">Dashboard</a>
             <a class="btn" href="<%=request.getContextPath()%>/logout">Logout</a>

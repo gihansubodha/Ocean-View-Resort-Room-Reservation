@@ -12,7 +12,7 @@ public class Bill {
     private BigDecimal taxAmount;
     private BigDecimal total;
 
-    // ✅ NEW fields for payment summary (won’t break old code)
+    //  NEW fields for payment summary (won’t break old code)
     private BigDecimal paidTotal;
     private BigDecimal balance;
     private String billStatus;
@@ -84,7 +84,7 @@ public class Bill {
         this.total = total;
     }
 
-    // ✅ NEW getters/setters
+    // NEW getters/setters
     public BigDecimal getPaidTotal() {
         return paidTotal;
     }

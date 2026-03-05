@@ -13,10 +13,15 @@ import java.time.temporal.ChronoUnit;
 public class BillingService {
 
     private final BillDAO billDAO;
-    private final RoomTypeDAO roomTypeDAO = new RoomTypeDAOImpl();
+    private final RoomTypeDAO roomTypeDAO;
 
     public BillingService(BillDAO billDAO) {
+        this(billDAO, new RoomTypeDAOImpl());
+    }
+
+    public BillingService(BillDAO billDAO, RoomTypeDAO roomTypeDAO) {
         this.billDAO = billDAO;
+        this.roomTypeDAO = roomTypeDAO;
     }
 
     public Bill generateBillObject(Reservation reservation) throws Exception {
@@ -38,32 +43,40 @@ public class BillingService {
             throw new IllegalArgumentException("Invalid reservation nights");
         }
 
-        int nights = (int) nightsLong;
-
         RoomType roomType = roomTypeDAO.findById(reservation.getRoomTypeId());
         if (roomType == null) {
             throw new IllegalArgumentException("Room type not found");
         }
+        if (roomType.getNightlyRate() == null) {
+            throw new IllegalArgumentException("Nightly rate not found for room type ID: " + reservation.getRoomTypeId());
+        }
 
         BigDecimal rate = roomType.getNightlyRate();
-        BigDecimal subtotal = rate.multiply(BigDecimal.valueOf(nights));
-        BigDecimal discount = BigDecimal.ZERO;
-        BigDecimal tax = BigDecimal.ZERO;
-        BigDecimal total = subtotal.subtract(discount).add(tax);
+        BigDecimal subtotal = rate.multiply(BigDecimal.valueOf(nightsLong));
 
         Bill bill = new Bill();
         bill.setReservationId(reservation.getReservationId());
-        bill.setNights(nights);
+        bill.setNights((int) nightsLong);
         bill.setNightlyRate(rate);
         bill.setSubtotal(subtotal);
-        bill.setDiscountAmount(discount);
-        bill.setTaxAmount(tax);
-        bill.setTotal(total);
+        bill.setDiscountAmount(BigDecimal.ZERO);
+        bill.setTaxAmount(BigDecimal.ZERO);
+        bill.setTotal(subtotal);
+        bill.setPaidTotal(BigDecimal.ZERO);
+        bill.setBalance(subtotal);
+        bill.setBillStatus("UNPAID");
 
         return bill;
     }
 
-    public int createBill(Bill bill) throws Exception {
+    public int saveBill(Bill bill) throws Exception {
+        if (bill == null) {
+            throw new IllegalArgumentException("Bill is null");
+        }
         return billDAO.create(bill);
+    }
+
+    public int createBill(Bill bill) throws Exception {
+        return saveBill(bill);
     }
 }

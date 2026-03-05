@@ -1,4 +1,4 @@
-package com.oceanview.api;
+/*package com.oceanview.api;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
@@ -19,4 +19,4 @@ public class ReservationApiServlet extends HttpServlet {
         resp.setContentType("application/json");
         resp.getWriter().write("{\"message\":\"TODO: implement POST reservation\"}");
     }
-}
+}*/

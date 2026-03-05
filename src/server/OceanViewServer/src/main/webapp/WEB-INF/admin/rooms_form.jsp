@@ -19,64 +19,107 @@
 <html>
 <head>
     <title><%= edit ? "Edit Room" : "Add Room" %></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/assets/ui.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
     <style>
-        body{font-family:Arial;background:#f6f7fb;margin:0;padding:24px;}
-        .card{max-width:820px;margin:auto;background:#fff;border:1px solid #e6eaf2;border-radius:16px;padding:18px;box-shadow:0 10px 26px rgba(17,24,39,.06);}
-        label{display:block;color:#64748b;font-size:12px;margin:10px 0 6px;}
-        input,select{padding:10px 12px;border-radius:12px;border:1px solid #e5e7eb;min-width:260px;}
-        .row{display:flex;gap:12px;flex-wrap:wrap;}
-        .btn{background:#0f172a;color:#fff;border:none;padding:10px 14px;border-radius:12px;font-weight:900;cursor:pointer;}
-        .back{background:#2563eb;text-decoration:none;display:inline-block;}
-        .err{background:#fee2e2;color:#991b1b;padding:10px 12px;border-radius:12px;margin:10px 0;}
+        .wide{ max-width: 980px; margin: 0 auto; }
+        .row3{
+            display:grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px 18px;
+        }
+        @media (max-width: 980px){ .row3{ grid-template-columns: 1fr; } }
+        .btnbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
     </style>
 </head>
 <body>
-<div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div style="font-weight:900;font-size:18px;"><%= edit ? "Edit Room" : "Add Room" %></div>
-        <a class="btn back" href="<%=request.getContextPath()%>/admin/rooms">Back</a>
+
+<div class="app-shell">
+    <div class="container wide">
+
+        <div class="topbar">
+            <div class="brand">
+                <div class="logo"></div>
+                <div>
+                    <h1>Ocean View Resort</h1>
+                    <div class="sub">Admin • Rooms</div>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <a class="btn btn-soft" href="<%=request.getContextPath()%>/admin/dashboard">
+                    <i class="fa-solid fa-chart-line"></i> Dashboard
+                </a>
+                <a class="btn btn-slate" href="<%=request.getContextPath()%>/admin/rooms">
+                    <i class="fa-solid fa-list"></i> Back to List
+                </a>
+                <a class="btn btn-danger" href="<%=request.getContextPath()%>/logout">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </div>
+
+        <div class="card card-pad">
+            <h2 class="page-title"><%= edit ? "Edit Room" : "Add Room" %></h2>
+            <div class="page-subtitle">Maintain room numbers, types and operational status.</div>
+
+            <% if (error != null) { %>
+            <div class="alert alert-err"><%= error %></div>
+            <% } %>
+
+            <form method="post" action="<%=request.getContextPath()%><%= edit ? "/admin/rooms/edit" : "/admin/rooms/add" %>">
+                <input type="hidden" name="roomId" value="<%= edit ? r.getRoomId() : 0 %>"/>
+
+                <div class="section">
+                    <div class="row3">
+                        <div>
+                            <label>Room Number</label>
+                            <input type="number" name="roomNumber" value="<%= edit ? r.getRoomNumber() : "" %>" required/>
+                        </div>
+
+                        <div>
+                            <label>Room Type</label>
+                            <select name="roomTypeId" required>
+                                <% if (types != null) for (RoomType t : types) { %>
+                                <option value="<%=t.getRoomTypeId()%>" <%= edit && t.getRoomTypeId()==r.getRoomTypeId() ? "selected":"" %>>
+                                    <%=t.getTypeName()%> (ID <%=t.getRoomTypeId()%>)
+                                </option>
+                                <% } %>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label>Status</label>
+                            <select name="status" required>
+                                <%
+                                    String st = edit ? r.getStatus() : "AVAILABLE";
+                                %>
+                                <option value="AVAILABLE" <%= "AVAILABLE".equals(st)?"selected":"" %>>AVAILABLE</option>
+                                <option value="RESERVED" <%= "RESERVED".equals(st)?"selected":"" %>>RESERVED</option>
+                                <option value="OCCUPIED" <%= "OCCUPIED".equals(st)?"selected":"" %>>OCCUPIED</option>
+                                <option value="MAINTENANCE" <%= "MAINTENANCE".equals(st)?"selected":"" %>>MAINTENANCE</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="btnbar" style="margin-top:14px;">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fa-solid fa-floppy-disk"></i> <%= edit ? "Save Changes" : "Create Room" %>
+                        </button>
+                        <a class="btn btn-soft" href="<%=request.getContextPath()%>/admin/rooms">
+                            <i class="fa-solid fa-arrow-left"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+
     </div>
-
-    <% if (error != null) { %><div class="err"><%=error%></div><% } %>
-
-    <form method="post" action="<%=request.getContextPath()%><%= edit ? "/admin/rooms/edit" : "/admin/rooms/add" %>">
-        <input type="hidden" name="roomId" value="<%= edit ? r.getRoomId() : 0 %>"/>
-
-        <div class="row">
-            <div>
-                <label>Room Number</label>
-                <input type="number" name="roomNumber" value="<%= edit ? r.getRoomNumber() : "" %>" required/>
-            </div>
-
-            <div>
-                <label>Room Type</label>
-                <select name="roomTypeId" required>
-                    <% if (types != null) for (RoomType t : types) { %>
-                    <option value="<%=t.getRoomTypeId()%>" <%= edit && t.getRoomTypeId()==r.getRoomTypeId() ? "selected":"" %>>
-                        <%=t.getTypeName()%> (ID <%=t.getRoomTypeId()%>)
-                    </option>
-                    <% } %>
-                </select>
-            </div>
-
-            <div>
-                <label>Status</label>
-                <select name="status" required>
-                    <%
-                        String st = edit ? r.getStatus() : "AVAILABLE";
-                    %>
-                    <option value="AVAILABLE" <%= "AVAILABLE".equals(st)?"selected":"" %>>AVAILABLE</option>
-                    <option value="RESERVED" <%= "RESERVED".equals(st)?"selected":"" %>>RESERVED</option>
-                    <option value="OCCUPIED" <%= "OCCUPIED".equals(st)?"selected":"" %>>OCCUPIED</option>
-                    <option value="MAINTENANCE" <%= "MAINTENANCE".equals(st)?"selected":"" %>>MAINTENANCE</option>
-                </select>
-            </div>
-        </div>
-
-        <div style="margin-top:14px;">
-            <button class="btn" type="submit"><%= edit ? "Save Changes" : "Create Room" %></button>
-        </div>
-    </form>
 </div>
+
 </body>
 </html>

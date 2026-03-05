@@ -16,62 +16,108 @@
 <html>
 <head>
     <title><%= edit ? "Edit Room Type" : "Add Room Type" %></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/assets/ui.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
     <style>
-        body{font-family:Arial;background:#f6f7fb;margin:0;padding:24px;}
-        .card{max-width:860px;margin:auto;background:#fff;border:1px solid #e6eaf2;border-radius:16px;padding:18px;box-shadow:0 10px 26px rgba(17,24,39,.06);}
-        label{display:block;color:#64748b;font-size:12px;margin:10px 0 6px;}
-        input,select,textarea{padding:10px 12px;border-radius:12px;border:1px solid #e5e7eb;min-width:260px;}
-        textarea{min-width:520px;min-height:90px;}
-        .row{display:flex;gap:12px;flex-wrap:wrap;}
-        .btn{background:#0f172a;color:#fff;border:none;padding:10px 14px;border-radius:12px;font-weight:900;cursor:pointer;}
-        .back{background:#2563eb;text-decoration:none;display:inline-block;}
-        .err{background:#fee2e2;color:#991b1b;padding:10px 12px;border-radius:12px;margin:10px 0;}
+        /* page-only (safe) */
+        .wide{ max-width: 980px; margin: 0 auto; }
+        .row4{
+            display:grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px 18px;
+        }
+        @media (max-width: 980px){ .row4{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
+        @media (max-width: 620px){ .row4{ grid-template-columns: 1fr; } }
+        .btnbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
     </style>
 </head>
 <body>
-<div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div style="font-weight:900;font-size:18px;"><%= edit ? "Edit Room Type" : "Add Room Type" %></div>
-        <a class="btn back" href="<%=request.getContextPath()%>/admin/room-types">Back</a>
+
+<div class="app-shell">
+    <div class="container wide">
+
+        <div class="topbar">
+            <div class="brand">
+                <div class="logo"></div>
+                <div>
+                    <h1>Ocean View Resort</h1>
+                    <div class="sub">Admin • Room Types</div>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <a class="btn btn-soft" href="<%=request.getContextPath()%>/admin/dashboard">
+                    <i class="fa-solid fa-chart-line"></i> Dashboard
+                </a>
+                <a class="btn btn-slate" href="<%=request.getContextPath()%>/admin/room-types">
+                    <i class="fa-solid fa-list"></i> Back to List
+                </a>
+                <a class="btn btn-danger" href="<%=request.getContextPath()%>/logout">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </div>
+
+        <div class="card card-pad">
+            <h2 class="page-title"><%= edit ? "Edit Room Type" : "Add Room Type" %></h2>
+            <div class="page-subtitle">Maintain room types, rates, capacity and descriptions.</div>
+
+            <% if (error != null) { %>
+            <div class="alert alert-err"><%= error %></div>
+            <% } %>
+
+            <form method="post" action="<%=request.getContextPath()%><%= edit ? "/admin/room-types/edit" : "/admin/room-types/add" %>">
+                <input type="hidden" name="roomTypeId" value="<%= edit ? rt.getRoomTypeId() : 0 %>"/>
+
+                <div class="section">
+                    <div class="row4">
+                        <div>
+                            <label>Type Name</label>
+                            <input name="typeName" value="<%= edit ? rt.getTypeName() : "" %>" required/>
+                        </div>
+
+                        <div>
+                            <label>Nightly Rate</label>
+                            <input name="nightlyRate" value="<%= edit ? rt.getNightlyRate() : "" %>" required/>
+                        </div>
+
+                        <div>
+                            <label>Max Guests</label>
+                            <input type="number" name="maxGuests" value="<%= edit ? rt.getMaxGuests() : "" %>" required/>
+                        </div>
+
+                        <div>
+                            <label>Active</label>
+                            <select name="isActive">
+                                <option value="1" <%= !edit || rt.isActive() ? "selected":"" %>>Yes</option>
+                                <option value="0" <%= edit && !rt.isActive() ? "selected":"" %>>No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:14px;">
+                        <label>Description</label>
+                        <textarea name="description"><%= edit && rt.getDescription()!=null ? rt.getDescription() : "" %></textarea>
+                    </div>
+
+                    <div class="btnbar" style="margin-top:14px;">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fa-solid fa-floppy-disk"></i> <%= edit ? "Save Changes" : "Create Room Type" %>
+                        </button>
+                        <a class="btn btn-soft" href="<%=request.getContextPath()%>/admin/room-types">
+                            <i class="fa-solid fa-arrow-left"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+
     </div>
-
-    <% if (error != null) { %><div class="err"><%=error%></div><% } %>
-
-    <form method="post" action="<%=request.getContextPath()%><%= edit ? "/admin/room-types/edit" : "/admin/room-types/add" %>">
-        <input type="hidden" name="roomTypeId" value="<%= edit ? rt.getRoomTypeId() : 0 %>"/>
-
-        <div class="row">
-            <div>
-                <label>Type Name</label>
-                <input name="typeName" value="<%= edit ? rt.getTypeName() : "" %>" required/>
-            </div>
-
-            <div>
-                <label>Nightly Rate</label>
-                <input name="nightlyRate" value="<%= edit ? rt.getNightlyRate() : "" %>" required/>
-            </div>
-
-            <div>
-                <label>Max Guests</label>
-                <input type="number" name="maxGuests" value="<%= edit ? rt.getMaxGuests() : "" %>" required/>
-            </div>
-
-            <div>
-                <label>Active</label>
-                <select name="isActive">
-                    <option value="1" <%= !edit || rt.isActive() ? "selected":"" %>>Yes</option>
-                    <option value="0" <%= edit && !rt.isActive() ? "selected":"" %>>No</option>
-                </select>
-            </div>
-        </div>
-
-        <label>Description</label>
-        <textarea name="description"><%= edit && rt.getDescription()!=null ? rt.getDescription() : "" %></textarea>
-
-        <div style="margin-top:14px;">
-            <button class="btn" type="submit"><%= edit ? "Save Changes" : "Create Room Type" %></button>
-        </div>
-    </form>
 </div>
+
 </body>
 </html>
