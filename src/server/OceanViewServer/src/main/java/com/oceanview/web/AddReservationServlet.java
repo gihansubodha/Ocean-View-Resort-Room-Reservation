@@ -2,7 +2,14 @@ package com.oceanview.web;
 
 import com.oceanview.dao.*;
 import com.oceanview.model.*;
+import com.oceanview.notify.sender.GmailSmtpEmailSender;
 import com.oceanview.service.ReservationService;
+
+// NEW imports (notification system)
+import com.oceanview.notify.NotificationService;
+import com.oceanview.notify.config.GmailConfig;
+import com.oceanview.notify.sender.EmailSender;
+import com.oceanview.notify.template.ReservationEmailTemplate;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -22,6 +29,15 @@ public class AddReservationServlet extends HttpServlet {
 
     private final ReservationService reservationService =
             new ReservationService(new ReservationDAOImpl());
+
+    // NEW: notification service
+    private NotificationService notificationService;
+
+    @Override
+    public void init() throws ServletException {
+        // Create the NotificationService once for this servlet (clean + efficient)
+        this.notificationService = buildNotificationService();
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -89,7 +105,53 @@ public class AddReservationServlet extends HttpServlet {
             // Bill is generated on create (even if unconfirmed)
             reservationService.generateBill(reservationId);
 
-            // where NOT to reserve room
+            // NEW: Gmail notification (safe + non-blocking)
+            try {
+                // Only send if guest email exists
+                String guestEmail = guest.getEmail();
+                if (guestEmail != null && !guestEmail.isBlank() && notificationService != null) {
+
+                    // Minimal template for "PENDING created"
+                    ReservationEmailTemplate template = new ReservationEmailTemplate() {
+                        @Override
+                        public String subject(Reservation r) {
+                            return "OceanView - Reservation Created (Pending) [" + r.getReservationCode() + "]";
+                        }
+
+                        @Override
+                        public String bodyHtml(Reservation r) {
+                            return String.format(
+                                    "<div style='font-family:Arial;line-height:1.5'>"
+                                            +   "<h2>Reservation Created (Pending Confirmation)</h2>"
+                                            +   "<p>Your reservation request has been created and is currently <b>PENDING</b>.</p>"
+                                            +   "<p><b>Reservation Code:</b> %s</p>"
+                                            +   "<p><b>Check-in:</b> %s<br/>"
+                                            +      "<b>Check-out:</b> %s<br/>"
+                                            +      "<b>Guests:</b> %d</p>"
+                                            +   "<p>To confirm, please provide the required document details at the front desk / staff portal.</p>"
+                                            +   "<hr/>"
+                                            +   "<p style='font-size:12px;color:#666'>OceanView Resort Reservation System</p>"
+                                            + "</div>",
+                                    r.getReservationCode(),
+                                    String.valueOf(r.getCheckIn()),
+                                    String.valueOf(r.getCheckOut()),
+                                    r.getNumGuests()
+                            );
+                        }
+                    };
+
+                    // Ensure reservation object has ID for email content
+                    reservation.setReservationId(reservationId);
+
+                    notificationService.sendReservationEmail(guestEmail, reservation, template);
+                }
+            } catch (Exception mailEx) {
+                // DO NOT break reservation creation if email fails
+                // (Optional) you can log this to server logs:
+                // mailEx.printStackTrace();
+            }
+
+            // where NOT to reserve room (keep your existing behavior)
             response.sendRedirect(request.getContextPath()
                     + "/reservations/view?id=" + reservationId
                     + "&created=1");
@@ -139,5 +201,18 @@ public class AddReservationServlet extends HttpServlet {
         String datePart = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
         String randomPart = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         return "RES-" + datePart + "-" + randomPart;
+    }
+
+
+    // NEW: Build NotificationService (DIP-friendly)
+    private NotificationService buildNotificationService() {
+        String user = System.getenv("OCEANVIEW_GMAIL_USER");
+        String pass = System.getenv("OCEANVIEW_GMAIL_APP_PASSWORD");
+
+        if (user == null || user.isBlank() || pass == null || pass.isBlank()) return null;
+
+        GmailConfig cfg = new GmailConfig(user, pass);
+        EmailSender sender = new GmailSmtpEmailSender(cfg);
+        return new NotificationService(sender);
     }
 }
