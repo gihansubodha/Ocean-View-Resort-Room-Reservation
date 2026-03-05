@@ -22,6 +22,9 @@
 <div class="card">
     <h2>Module not implemented yet</h2>
     <p class="muted">This is a placeholder for the admin feature. You can implement it later if needed.</p>
+    <button type="button" class="btn btn-soft" onclick="history.back()">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </button>
     <p><a href="<%=request.getContextPath()%>/admin/dashboard">← Back to dashboard</a></p>
 </div>
 </body>

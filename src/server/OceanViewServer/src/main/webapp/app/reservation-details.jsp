@@ -86,6 +86,9 @@
             </div>
 
             <div class="nav-actions">
+                <button type="button" class="btn btn-soft" onclick="history.back()">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </button>
                 <a class="btn" href="<%= request.getContextPath() %>/app/home.jsp">Home</a>
                 <a class="btn" style="background: var(--danger); border-color: var(--danger); color:#fff;"
                    href="<%= request.getContextPath() %>/logout">Logout</a>

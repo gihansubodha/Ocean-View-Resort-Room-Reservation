@@ -22,6 +22,9 @@
             </div>
 
             <div class="nav-actions">
+                <button type="button" class="btn btn-soft" onclick="history.back()">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </button>
                 <a class="btn btn-soft" href="<%= request.getContextPath() %>/app/home.jsp">Home</a>
                 <a class="btn btn-danger" href="<%= request.getContextPath() %>/logout">Logout</a>
             </div>

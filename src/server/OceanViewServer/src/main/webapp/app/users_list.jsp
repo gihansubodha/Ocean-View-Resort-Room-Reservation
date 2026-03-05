@@ -34,6 +34,9 @@
             <div style="font-weight:900;font-size:18px;">User Management</div>
             <div style="color:#6b7280;font-size:13px;">Add / Edit / Remove staff accounts</div>
         </div>
+        <button type="button" class="btn btn-soft" onclick="history.back()">
+            <i class="fa-solid fa-arrow-left"></i> Back
+        </button>
         <a class="btn" href="<%=request.getContextPath()%>/admin/users/add">+ Add User</a>
     </div>
 

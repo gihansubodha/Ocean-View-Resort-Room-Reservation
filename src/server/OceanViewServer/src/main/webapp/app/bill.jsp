@@ -105,11 +105,17 @@
 
                 <!-- Context-aware actions -->
                 <% if (!dashboardMode) { %>
+                <button type="button" class="btn btn-soft" onclick="history.back()">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </button>
                 <a class="btn btn-warning" href="<%= request.getContextPath() %>/bills/view">Billing Dashboard</a>
                 <% if (d != null) { %>
                 <a class="btn btn-primary" href="<%= request.getContextPath() %>/reservations/view?id=<%= d.getReservationId() %>">Back to Reservation</a>
                 <% } %>
                 <% } else { %>
+                <button type="button" class="btn btn-soft" onclick="history.back()">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </button>
                 <div class="pill">💳 Today’s overview</div>
                 <% } %>
 
@@ -313,12 +319,6 @@
                         No payment required (Bill is fully paid).
                     </div>
                     <% } %>
-
-                    <div class="actionsRow">
-                        <a class="btn btn-warning" href="<%= request.getContextPath() %>/bills/view">Billing Dashboard</a>
-                        <a class="btn btn-primary" href="<%= request.getContextPath() %>/reservations/view?id=<%= d.getReservationId() %>">Back to Reservation</a>
-                    </div>
-
                 </div>
             </div>
 

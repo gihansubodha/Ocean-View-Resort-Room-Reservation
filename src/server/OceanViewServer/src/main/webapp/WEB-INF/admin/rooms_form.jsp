@@ -22,7 +22,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link rel="stylesheet" href="<%= request.getContextPath() %>/assets/ui.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <style>
         .wide{ max-width: 980px; margin: 0 auto; }
@@ -50,6 +49,9 @@
             </div>
 
             <div class="nav-actions">
+                <button type="button" class="btn btn-soft" onclick="history.back()">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </button>
                 <a class="btn btn-soft" href="<%=request.getContextPath()%>/admin/dashboard">
                     <i class="fa-solid fa-chart-line"></i> Dashboard
                 </a>
