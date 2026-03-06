@@ -1,17 +1,19 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
+<%
+  String timeout = request.getParameter("timeout");
+  String loggedOut = request.getParameter("loggedout");
+  String err = (String) request.getAttribute("error");
+%>
 <!DOCTYPE html>
 <html>
 <head>
   <title>Ocean View Resort - Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- THEME (shared) -->
   <link rel="stylesheet" href="<%= request.getContextPath() %>/assets/ui.css">
-  <!-- ICONS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <style>
-    /* Login-only styling (NO logic changes) */
     .loginWrap{ max-width: 980px; margin: 0 auto; }
     .loginGrid{
       display:grid;
@@ -89,7 +91,7 @@
       pointer-events:none;
     }
     .inputIcon input{
-      padding-left: 38px; /* room for icon */
+      padding-left: 38px;
     }
 
     .loginFooter{
@@ -101,6 +103,9 @@
     }
 
     .btnWide{ width:100%; justify-content:center; }
+
+    .toast-timeout{ border-left: 6px solid #F59E0B; }
+    .toast-info{ border-left: 6px solid #2563EB; }
   </style>
 </head>
 
@@ -108,7 +113,6 @@
 <div class="app-shell">
   <div class="container loginWrap">
 
-    <!-- Top bar -->
     <div class="topbar">
       <div class="brand">
         <div class="logo"></div>
@@ -122,7 +126,6 @@
 
     <div class="loginGrid">
 
-      <!-- Left: eye-catching hero -->
       <div class="hero">
         <h2><i class="fa-solid fa-hotel"></i> Welcome back</h2>
         <p>
@@ -161,19 +164,13 @@
         </div>
       </div>
 
-      <!-- Right: login form -->
       <div class="card card-pad loginCard">
         <h2 class="page-title"><i class="fa-solid fa-right-to-bracket"></i> Login</h2>
         <div class="page-subtitle">Enter your credentials to access the system.</div>
 
-        <%
-          String err = (String) request.getAttribute("error");
-          if (err != null) {
-        %>
+        <% if (err != null) { %>
         <div class="alert alert-err" style="margin-top:12px;"><%= err %></div>
-        <%
-          }
-        %>
+        <% } %>
 
         <form method="post" action="<%= request.getContextPath() %>/login">
           <div class="section" style="margin-top:14px;">
@@ -217,5 +214,42 @@
 
   </div>
 </div>
+
+<% if ("1".equals(timeout)) { %>
+<div id="toastTimeout" class="toast toast-timeout show">
+  <button class="close" type="button" onclick="document.getElementById('toastTimeout').style.display='none'">&times;</button>
+  <h3>Session Expired</h3>
+  <div class="line">Your session timed out. Please log in again.</div>
+</div>
+<script>
+  window.addEventListener("load", function () {
+    var toast = document.getElementById("toastTimeout");
+    if (toast) {
+      setTimeout(function () {
+        toast.style.display = "none";
+      }, 3500);
+    }
+  });
+</script>
+<% } %>
+
+<% if ("1".equals(loggedOut)) { %>
+<div id="toastLogout" class="toast toast-info show">
+  <button class="close" type="button" onclick="document.getElementById('toastLogout').style.display='none'">&times;</button>
+  <h3>Logged Out</h3>
+  <div class="line">You have been logged out successfully.</div>
+</div>
+<script>
+  window.addEventListener("load", function () {
+    var toast = document.getElementById("toastLogout");
+    if (toast) {
+      setTimeout(function () {
+        toast.style.display = "none";
+      }, 3000);
+    }
+  });
+</script>
+<% } %>
+
 </body>
 </html>

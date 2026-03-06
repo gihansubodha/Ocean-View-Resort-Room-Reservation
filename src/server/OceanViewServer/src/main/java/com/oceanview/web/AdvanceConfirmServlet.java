@@ -11,14 +11,9 @@ import com.oceanview.model.Bill;
 import com.oceanview.model.Guest;
 import com.oceanview.model.Reservation;
 import com.oceanview.model.ReservationDetails;
-import com.oceanview.notify.sender.GmailSmtpEmailSender;
+import com.oceanview.notify.NotificationManager;
+import com.oceanview.notify.event.ReservationConfirmedEvent;
 import com.oceanview.service.ReservationService;
-
-// NEW (notification)
-import com.oceanview.notify.NotificationService;
-import com.oceanview.notify.config.GmailConfig;
-import com.oceanview.notify.sender.EmailSender;
-import com.oceanview.notify.template.ReservationEmailTemplate;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -36,14 +31,6 @@ public class AdvanceConfirmServlet extends HttpServlet {
 
     private final ReservationService reservationService =
             new ReservationService(new ReservationDAOImpl());
-
-    // NEW
-    private NotificationService notificationService;
-
-    @Override
-    public void init() {
-        this.notificationService = buildNotificationService();
-            }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -97,48 +84,18 @@ public class AdvanceConfirmServlet extends HttpServlet {
                 return;
             }
 
-            // confirm + reserve room
             reservationService.updateStatus(reservationId, "CONFIRMED");
             if (r.getRoomId() != null) {
                 roomDAO.updateStatus(r.getRoomId(), "RESERVED");
             }
 
-            // NEW: send confirmed email (non-blocking)
-            try {
-                if (notificationService != null && g != null && g.getEmail() != null && !g.getEmail().isBlank()) {
-                    r.setReservationId(reservationId);
+            r.setReservationId(reservationId);
 
-                    ReservationEmailTemplate template = new ReservationEmailTemplate() {
-                        @Override
-                        public String subject(Reservation rr) {
-                            return "OceanView - Reservation Confirmed [" + rr.getReservationCode() + "]";
-                        }
-
-                        @Override
-                        public String bodyHtml(Reservation r) {
-                            return String.format(
-                                    "<div style='font-family:Arial;line-height:1.5'>"
-                                            +   "<h2>Reservation Created (Pending Confirmation)</h2>"
-                                            +   "<p>Your reservation request has been created and is currently <b>PENDING</b>.</p>"
-                                            +   "<p><b>Reservation Code:</b> %s</p>"
-                                            +   "<p><b>Check-in:</b> %s<br/>"
-                                            +      "<b>Check-out:</b> %s<br/>"
-                                            +      "<b>Guests:</b> %d</p>"
-                                            +   "<p>To confirm, please provide the required document details at the front desk / staff portal.</p>"
-                                            +   "<hr/>"
-                                            +   "<p style='font-size:12px;color:#666'>OceanView Resort Reservation System</p>"
-                                            + "</div>",
-                                    r.getReservationCode(),
-                                    String.valueOf(r.getCheckIn()),
-                                    String.valueOf(r.getCheckOut()),
-                                    r.getNumGuests()
-                            );
-                        }
-                    };
-
-                    notificationService.sendReservationEmail(g.getEmail(), r, template);
-                }
-            } catch (Exception ignored) {}
+            if (g != null && g.getEmail() != null && !g.getEmail().isBlank()) {
+                NotificationManager.getInstance().publish(
+                        new ReservationConfirmedEvent(r, g.getEmail())
+                );
+            }
 
             resp.sendRedirect(req.getContextPath()
                     + "/reservations/view?id=" + reservationId
@@ -154,17 +111,5 @@ public class AdvanceConfirmServlet extends HttpServlet {
     private String safe(String s) {
         if (s == null) return "";
         return s.replace(" ", "%20");
-    }
-
-    // NEW
-    private NotificationService buildNotificationService() {
-        String user = System.getenv("OCEANVIEW_GMAIL_USER");
-        String pass = System.getenv("OCEANVIEW_GMAIL_APP_PASSWORD");
-
-        if (user == null || user.isBlank() || pass == null || pass.isBlank()) return null;
-
-        GmailConfig cfg = new GmailConfig(user, pass);
-        EmailSender sender = new GmailSmtpEmailSender(cfg);
-        return new NotificationService(sender);
     }
 }

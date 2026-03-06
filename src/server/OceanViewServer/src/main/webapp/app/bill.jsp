@@ -6,7 +6,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Bill</title>
+    <title>Payments</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="<%= request.getContextPath() %>/assets/ui.css">
     <style>
@@ -124,7 +124,7 @@
         </div>
 
         <div class="card card-pad">
-            <h2 class="page-title">Bill</h2>
+            <h2 class="page-title">Payments</h2>
             <div class="page-subtitle">
                 <%= dashboardMode ? "Track today’s payments and unpaid/partial reservations." : "Review charges and accept payments securely." %>
             </div>

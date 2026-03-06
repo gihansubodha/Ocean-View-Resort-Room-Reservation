@@ -5,13 +5,9 @@ import com.oceanview.dao.GuestDAOImpl;
 import com.oceanview.dao.ReservationDAOImpl;
 import com.oceanview.model.Guest;
 import com.oceanview.model.Reservation;
-import com.oceanview.notify.sender.GmailSmtpEmailSender;
+import com.oceanview.notify.NotificationManager;
+import com.oceanview.notify.event.ReservationCancelledEvent;
 import com.oceanview.service.ReservationService;
-
-import com.oceanview.notify.NotificationService;
-import com.oceanview.notify.config.GmailConfig;
-import com.oceanview.notify.sender.EmailSender;
-import com.oceanview.notify.template.ReservationEmailTemplate;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
@@ -26,13 +22,6 @@ public class CancelReservationServlet extends HttpServlet {
     private final ReservationService reservationService =
             new ReservationService(new ReservationDAOImpl());
 
-    private NotificationService notificationService;
-
-    @Override
-    public void init() {
-        this.notificationService = buildNotificationService();
-    }
-
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
@@ -43,36 +32,11 @@ public class CancelReservationServlet extends HttpServlet {
 
             reservationService.cancel(id);
 
-            // Cancelled email (non-blocking)
-            try {
-                if (notificationService != null && r != null && g != null
-                        && g.getEmail() != null && !g.getEmail().isBlank()) {
-
-                    ReservationEmailTemplate template = new ReservationEmailTemplate() {
-                        @Override
-                        public String subject(Reservation rr) {
-                            return "OceanView - Reservation Cancelled [" + rr.getReservationCode() + "]";
-                        }
-
-                        @Override
-                        public String bodyHtml(Reservation rr) {
-                            return String.format(
-                                    "<div style='font-family:Arial;line-height:1.5'>"
-                                            + "<h2>Reservation Cancelled</h2>"
-                                            + "<p>Your reservation has been <b>CANCELLED</b>.</p>"
-                                            + "<p><b>Reservation Code:</b> %s</p>"
-                                            + "<p>If this was a mistake, please contact reception.</p>"
-                                            + "<hr/>"
-                                            + "<p style='font-size:12px;color:#666'>OceanView Resort Reservation System</p>"
-                                            + "</div>",
-                                    rr.getReservationCode()
-                            );
-                        }
-                    };
-
-                    notificationService.sendReservationEmail(g.getEmail(), r, template);
-                }
-            } catch (Exception ignored) { }
+            if (r != null && g != null && g.getEmail() != null && !g.getEmail().isBlank()) {
+                NotificationManager.getInstance().publish(
+                        new ReservationCancelledEvent(r, g.getEmail())
+                );
+            }
 
             resp.sendRedirect(req.getContextPath() + "/reservations/view?id=" + id + "&toast=cancelled");
         } catch (Exception e) {
@@ -82,16 +46,7 @@ public class CancelReservationServlet extends HttpServlet {
         }
     }
 
-    private String url(String s) { return s == null ? "" : s.replace(" ", "%20"); }
-
-    private NotificationService buildNotificationService() {
-        String user = System.getenv("OCEANVIEW_GMAIL_USER");
-        String pass = System.getenv("OCEANVIEW_GMAIL_APP_PASSWORD");
-
-        if (user == null || user.isBlank() || pass == null || pass.isBlank()) return null;
-
-        GmailConfig cfg = new GmailConfig(user, pass);
-        EmailSender sender = new GmailSmtpEmailSender(cfg);
-        return new NotificationService(sender);
+    private String url(String s) {
+        return s == null ? "" : s.replace(" ", "%20");
     }
 }

@@ -8,7 +8,12 @@
         return;
     }
 
-        String username = authUser.getUsername();
+    String username = authUser.getUsername();
+
+    String toastSuccess = (String) session.getAttribute("toastSuccess");
+    if (toastSuccess != null) {
+        session.removeAttribute("toastSuccess");
+    }
 %>
 
 <!DOCTYPE html>
@@ -34,6 +39,10 @@
         .tile p{ margin:0 0 12px; color: var(--muted); font-size: 13px; line-height:1.45; }
         .btnrow{ display:flex; flex-wrap:wrap; gap:10px; }
         .footer{ margin-top: 14px; color: var(--muted); font-size: 12px; text-align:center; }
+
+        .toast-success{
+            border-left: 6px solid var(--success);
+        }
     </style>
 </head>
 
@@ -81,16 +90,17 @@
                 </div>
 
                 <div class="tile">
-                    <h3>Reservation Details</h3>
+                    <h3>Reservations & Bills</h3>
                     <p>Search reservations by ID, code, NIC/Passport, phone, email, room number, date range, or today’s arrivals/departures.</p>
+                    <p>Navigate to bills.</p>
                     <div class="btnrow">
                         <a class="btn btn-primary" href="<%= request.getContextPath() %>/reservations/view">Search Reservations</a>
                     </div>
                 </div>
 
                 <div class="tile">
-                    <h3>Billing</h3>
-                    <p>View bills and accept payments.</p>
+                    <h3>Payments</h3>
+                    <p>View payment information.</p>
                     <div class="btnrow">
                         <a class="btn btn-warning" href="<%= request.getContextPath() %>/bills/view">View Bills</a>
                     </div>
@@ -120,5 +130,28 @@
 
     </div>
 </div>
+
+<% if (toastSuccess != null) { %>
+<div id="toastSuccess" class="toast toast-success">
+    <button class="close" onclick="document.getElementById('toastSuccess').style.display='none'">&times;</button>
+    <h3>Success</h3>
+    <div class="line"><%= toastSuccess %></div>
+</div>
+
+<script>
+    (function () {
+        var toast = document.getElementById("toastSuccess");
+        if (toast) {
+            toast.style.display = "block";
+            setTimeout(function () {
+                if (toast) {
+                    toast.style.display = "none";
+                }
+            }, 3000);
+        }
+    })();
+</script>
+<% } %>
+
 </body>
 </html>

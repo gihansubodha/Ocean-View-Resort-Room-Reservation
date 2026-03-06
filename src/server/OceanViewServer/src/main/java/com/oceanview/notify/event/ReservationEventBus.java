@@ -1,16 +1,27 @@
 package com.oceanview.notify.event;
 
-import com.oceanview.notify.listener.ReservationEmailListener;
+import com.oceanview.notify.listener.ReservationEventListener;
+
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ReservationEventBus {
 
-    private final ReservationEmailListener emailListener;
+    private final List<ReservationEventListener> listeners = new CopyOnWriteArrayList<>();
 
-    public ReservationEventBus(ReservationEmailListener emailListener) {
-        this.emailListener = emailListener;
+    public void registerListener(ReservationEventListener listener) {
+        if (listener != null) {
+            listeners.add(listener);
+        }
     }
 
-    public void publish(ReservationConfirmedEvent event) throws Exception {
-        emailListener.onConfirmed(event);
+    public void unregisterListener(ReservationEventListener listener) {
+        listeners.remove(listener);
+    }
+
+    public void publish(ReservationEvent event) throws Exception {
+        for (ReservationEventListener listener : listeners) {
+            listener.onEvent(event);
+        }
     }
 }

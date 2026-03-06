@@ -35,42 +35,61 @@ public class AdminUserFormServlet extends HttpServlet {
 
         int userId = parseInt(req.getParameter("userId"));
         String username = safe(req.getParameter("username"));
-        String role = safe(req.getParameter("role"));          // ADMIN / STAFF
+        String role = safe(req.getParameter("role"));
         boolean active = "1".equals(req.getParameter("isActive"));
-        String password = safe(req.getParameter("password"));  // optional on edit
+        String password = safe(req.getParameter("password"));
+
+        HttpSession session = req.getSession();
 
         try {
             if (username.isEmpty()) throw new IllegalArgumentException("Username is required");
             if (!"ADMIN".equalsIgnoreCase(role) && !"STAFF".equalsIgnoreCase(role))
                 throw new IllegalArgumentException("Role must be ADMIN or STAFF");
 
-            User u = edit ? userDAO.findById(userId) : new User();
-            if (edit && u == null) throw new IllegalArgumentException("User not found");
-
-            u.setUsername(username);
-            u.setRole(role.toUpperCase());
-            u.setActive(active);
-
             if (!edit) {
                 if (password.isEmpty()) throw new IllegalArgumentException("Password is required");
+
+                User u = new User();
+                u.setUsername(username);
+                u.setRole(role.toUpperCase());
+                u.setActive(active);
                 u.setPasswordHash(PasswordUtil.createStoredPassword(password));
+
                 userDAO.create(u);
+                session.setAttribute("toastSuccess", "User created successfully: " + username);
+
             } else {
-                // keep existing password if blank
+                User u = userDAO.findById(userId);
+                if (u == null) throw new IllegalArgumentException("User not found");
+
+                String oldRole = u.getRole();
+
+                u.setUsername(username);
+                u.setRole(role.toUpperCase());
+                u.setActive(active);
+
                 if (!password.isEmpty()) {
                     u.setPasswordHash(PasswordUtil.createStoredPassword(password));
                 }
-                // IMPORTANT: userDAO.update expects password_hash not null
+
                 if (u.getPasswordHash() == null || u.getPasswordHash().trim().isEmpty())
                     throw new IllegalStateException("Existing password_hash missing for this user");
+
                 userDAO.update(u);
+
+                if (!oldRole.equalsIgnoreCase(role)) {
+                    session.setAttribute("toastSuccess",
+                            "User updated successfully. Role changed from " + oldRole + " to " + role.toUpperCase() + ".");
+                } else {
+                    session.setAttribute("toastSuccess", "User updated successfully: " + username);
+                }
             }
 
             resp.sendRedirect(req.getContextPath() + "/admin/users");
+
         } catch (Exception e) {
             req.setAttribute("error", e.getMessage());
 
-            // keep typed values on validation error
             User temp = new User();
             temp.setUserId(userId);
             temp.setUsername(username);

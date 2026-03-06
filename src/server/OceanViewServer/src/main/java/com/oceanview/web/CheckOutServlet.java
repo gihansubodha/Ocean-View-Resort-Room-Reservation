@@ -5,13 +5,9 @@ import com.oceanview.dao.GuestDAOImpl;
 import com.oceanview.dao.ReservationDAOImpl;
 import com.oceanview.model.Guest;
 import com.oceanview.model.Reservation;
+import com.oceanview.notify.NotificationManager;
+import com.oceanview.notify.event.ReservationCheckedOutEvent;
 import com.oceanview.service.ReservationService;
-
-import com.oceanview.notify.NotificationService;
-import com.oceanview.notify.config.GmailConfig;
-import com.oceanview.notify.sender.EmailSender;
-import com.oceanview.notify.sender.GmailSmtpEmailSender;
-import com.oceanview.notify.template.ReservationEmailTemplate;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
@@ -26,20 +22,8 @@ public class CheckOutServlet extends HttpServlet {
     private final ReservationDAOImpl reservationDAO = new ReservationDAOImpl();
     private final GuestDAO guestDAO = new GuestDAOImpl();
 
-    private NotificationService notificationService;
-
-    @Override
-    public void init() {
-        this.notificationService = buildNotificationService();
-    }
-
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-
-        // DEBUG (temporary) - confirms Tomcat can read app password env var
-        String p = System.getenv("OCEANVIEW_GMAIL_APP_PASSWORD");
-        System.out.println("PASS LEN=" + (p == null ? 0 : p.length()));
-
         int id = Integer.parseInt(req.getParameter("id"));
 
         try {
@@ -48,46 +32,12 @@ public class CheckOutServlet extends HttpServlet {
 
             reservationService.checkOut(id);
 
-            // Checked-out email (non-blocking)
-            try {
-                Reservation after = reservationDAO.findById(id);
+            Reservation after = reservationDAO.findById(id);
 
-                boolean canSend =
-                        notificationService != null
-                                && after != null
-                                && g != null
-                                && g.getEmail() != null
-                                && !g.getEmail().trim().isEmpty();
-
-                if (canSend) {
-                    ReservationEmailTemplate template = new ReservationEmailTemplate() {
-                        @Override
-                        public String subject(Reservation rr) {
-                            return "OceanView - Checked Out [" + rr.getReservationCode() + "]";
-                        }
-
-                        @Override
-                        public String bodyHtml(Reservation rr) {
-                            return String.format(
-                                    "<div style='font-family:Arial;line-height:1.5'>"
-                                            + "<h2>Check-out Completed</h2>"
-                                            + "<p>Status updated to <b>CHECKED_OUT</b>.</p>"
-                                            + "<p><b>Reservation Code:</b> %s</p>"
-                                            + "<p>Thank you for staying with OceanView.</p>"
-                                            + "<hr/>"
-                                            + "<p style='font-size:12px;color:#666'>OceanView Resort Reservation System</p>"
-                                            + "</div>",
-                                    rr.getReservationCode()
-                            );
-                        }
-                    };
-
-                    getServletContext().log("EMAIL SEND ATTEMPT: to=" + g.getEmail());
-                    notificationService.sendReservationEmail(g.getEmail(), after, template);
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                getServletContext().log("EMAIL SEND FAILED: " + ex.getMessage(), ex);
+            if (after != null && g != null && g.getEmail() != null && !g.getEmail().trim().isEmpty()) {
+                NotificationManager.getInstance().publish(
+                        new ReservationCheckedOutEvent(after, g.getEmail())
+                );
             }
 
             resp.sendRedirect(req.getContextPath() + "/reservations/view?id=" + id + "&toast=checkedout");
@@ -107,21 +57,5 @@ public class CheckOutServlet extends HttpServlet {
 
     private String url(String s) {
         return s == null ? "" : s.replace(" ", "%20");
-    }
-
-    private NotificationService buildNotificationService() {
-        String user = System.getenv("OCEANVIEW_GMAIL_USER");
-        String pass = System.getenv("OCEANVIEW_GMAIL_APP_PASSWORD");
-
-        if (user == null || user.trim().isEmpty() || pass == null || pass.trim().isEmpty()) {
-            return null;
-        }
-
-        // IMPORTANT: do NOT strip here if your sender already normalizes.
-        // But it's safe to keep pass raw and let GmailSmtpEmailSender normalize.
-
-        GmailConfig cfg = new GmailConfig(user, pass);
-        EmailSender sender = new GmailSmtpEmailSender(cfg);
-        return new NotificationService(sender);
     }
 }

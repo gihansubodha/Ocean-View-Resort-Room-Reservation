@@ -21,7 +21,6 @@ public class AdminDashboardDAOImpl implements AdminDashboardDAO {
 
         try (Connection con = DbUtil.getConnection()) {
 
-            // TODAY: total reservations where check_in = today
             try (PreparedStatement ps = con.prepareStatement(
                     "SELECT COUNT(*) FROM reservations WHERE check_in = CURDATE()"
             )) {
@@ -30,7 +29,6 @@ public class AdminDashboardDAOImpl implements AdminDashboardDAO {
                 }
             }
 
-            // TODAY: checked-in today
             try (PreparedStatement ps = con.prepareStatement(
                     "SELECT COUNT(*) FROM reservations WHERE status='CHECKED_IN' AND check_in = CURDATE()"
             )) {
@@ -39,7 +37,6 @@ public class AdminDashboardDAOImpl implements AdminDashboardDAO {
                 }
             }
 
-            // TODAY: guests in-house today (sum num_guests for active stays)
             try (PreparedStatement ps = con.prepareStatement(
                     "SELECT COALESCE(SUM(num_guests),0) " +
                             "FROM reservations " +
@@ -51,7 +48,6 @@ public class AdminDashboardDAOImpl implements AdminDashboardDAO {
                 }
             }
 
-            // TODAY: full payments paid today (sum total_amount for bills marked PAID today)
             try (PreparedStatement ps = con.prepareStatement(
                     "SELECT COALESCE(SUM(total_amount),0) " +
                             "FROM bills " +
@@ -62,7 +58,6 @@ public class AdminDashboardDAOImpl implements AdminDashboardDAO {
                 }
             }
 
-            // TODAY: outstanding balances of CHECK-OUT is today
             try (PreparedStatement ps = con.prepareStatement(
                     "SELECT COALESCE(SUM(b.balance),0) " +
                             "FROM bills b " +
@@ -74,7 +69,6 @@ public class AdminDashboardDAOImpl implements AdminDashboardDAO {
                 }
             }
 
-            // TODAY: arrivals today not checked-in
             try (PreparedStatement ps = con.prepareStatement(
                     "SELECT COUNT(*) FROM reservations " +
                             "WHERE check_in = CURDATE() AND status <> 'CHECKED_IN'"
@@ -84,7 +78,6 @@ public class AdminDashboardDAOImpl implements AdminDashboardDAO {
                 }
             }
 
-            // RANGE: total reservations by check_in date
             try (PreparedStatement ps = con.prepareStatement(
                     "SELECT COUNT(*) FROM reservations WHERE check_in BETWEEN ? AND ?"
             )) {
@@ -95,7 +88,6 @@ public class AdminDashboardDAOImpl implements AdminDashboardDAO {
                 }
             }
 
-            // RANGE: checked-in reservations by check_in date
             try (PreparedStatement ps = con.prepareStatement(
                     "SELECT COUNT(*) FROM reservations WHERE status='CHECKED_IN' AND check_in BETWEEN ? AND ?"
             )) {
@@ -106,7 +98,6 @@ public class AdminDashboardDAOImpl implements AdminDashboardDAO {
                 }
             }
 
-            // RANGE: cancelled reservations by check_in date
             try (PreparedStatement ps = con.prepareStatement(
                     "SELECT COUNT(*) FROM reservations WHERE status='CANCELLED' AND check_in BETWEEN ? AND ?"
             )) {
@@ -117,7 +108,6 @@ public class AdminDashboardDAOImpl implements AdminDashboardDAO {
                 }
             }
 
-            // RANGE: total paid in range (payments table)
             try (PreparedStatement ps = con.prepareStatement(
                     "SELECT COALESCE(SUM(p.paid_amount),0) " +
                             "FROM payments p " +
@@ -138,20 +128,25 @@ public class AdminDashboardDAOImpl implements AdminDashboardDAO {
         return s;
     }
 
-    // Busy days (last 30 days)
     @Override
     public List<Map<String, Object>> getBusyDays(LocalDate ignoredStart, LocalDate ignoredEnd) throws Exception {
         LocalDate sDate = LocalDate.now().minusDays(29);
         LocalDate eDate = LocalDate.now();
 
-        List<Map<String, Object>> list = new ArrayList<>();
+        Map<String, Integer> countsByDay = new LinkedHashMap<>();
+        LocalDate cursor = sDate;
+        while (!cursor.isAfter(eDate)) {
+            countsByDay.put(cursor.toString(), 0);
+            cursor = cursor.plusDays(1);
+        }
 
         try (Connection con = DbUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(
                      "SELECT check_in AS day, COUNT(*) AS cnt " +
                              "FROM reservations " +
                              "WHERE status='CHECKED_IN' AND check_in BETWEEN ? AND ? " +
-                             "GROUP BY check_in ORDER BY check_in"
+                             "GROUP BY check_in " +
+                             "ORDER BY check_in"
              )) {
 
             ps.setDate(1, java.sql.Date.valueOf(sDate));
@@ -159,17 +154,24 @@ public class AdminDashboardDAOImpl implements AdminDashboardDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    Map<String, Object> row = new HashMap<>();
-                    row.put("day", rs.getDate("day").toString());
-                    row.put("value", rs.getInt("cnt"));
-                    list.add(row);
+                    String day = rs.getDate("day").toString();
+                    int count = rs.getInt("cnt");
+                    countsByDay.put(day, count);
                 }
             }
         }
+
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (Map.Entry<String, Integer> entry : countsByDay.entrySet()) {
+            Map<String, Object> row = new HashMap<>();
+            row.put("day", entry.getKey());
+            row.put("value", entry.getValue());
+            list.add(row);
+        }
+
         return list;
     }
 
-    // Most chosen room types (last 30 days)
     @Override
     public List<Map<String, Object>> getPopularRoomTypes(LocalDate ignoredStart, LocalDate ignoredEnd) throws Exception {
         LocalDate sDate = LocalDate.now().minusDays(29);
@@ -200,6 +202,7 @@ public class AdminDashboardDAOImpl implements AdminDashboardDAO {
                 }
             }
         }
+
         return list;
     }
 }

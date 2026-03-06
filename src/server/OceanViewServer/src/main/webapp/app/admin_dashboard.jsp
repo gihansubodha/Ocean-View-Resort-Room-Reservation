@@ -11,15 +11,24 @@
     List<Map<String,Object>> busyDays = (List<Map<String,Object>>) request.getAttribute("busyDays");
     List<Map<String,Object>> popularRoomTypes = (List<Map<String,Object>>) request.getAttribute("popularRoomTypes");
 
+    String toastSuccess = (String) session.getAttribute("toastSuccess");
+    if (toastSuccess != null) {
+        session.removeAttribute("toastSuccess");
+    }
+
     if (stats == null) stats = new AdminDashboardStats();
+    if (start == null) start = "";
+    if (end == null) end = "";
+    if (busyDays == null) busyDays = new java.util.ArrayList<Map<String,Object>>();
+    if (popularRoomTypes == null) popularRoomTypes = new java.util.ArrayList<Map<String,Object>>();
 %>
 
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <title>Ocean View Resort - Admin Panel</title>
+     <title>Ocean View Resort - Admin Panel</title>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="<%=request.getContextPath()%>/assets/ui.css">
 
     <style>
         :root{
@@ -37,7 +46,6 @@
 
         .wrap{max-width:1220px;margin:0 auto;padding:18px 18px 28px;}
 
-        /* Top bar */
         .topbar{
             background:var(--card);
             border:1px solid var(--border);
@@ -68,7 +76,6 @@
             background:#fff;color:#0f172a;font-size:13px;font-weight:800;
         }
 
-        /* Sections */
         .titleRow{
             margin-top:14px;
             display:flex;
@@ -129,6 +136,10 @@
         .linkBtn.primary{background:#2563eb;color:#fff;border-color:#2563eb}
         .linkBtn.warn{background:#f59e0b;color:#111827;border-color:#f59e0b}
 
+        .toast-success{
+            border-left: 6px solid #16A34A;
+        }
+
         @media(max-width:1200px){
             .grid.kpi{grid-template-columns:repeat(3,minmax(170px,1fr));}
             .grid.two{grid-template-columns:1fr;}
@@ -146,7 +157,6 @@
 <body>
 <div class="wrap">
 
-    <!-- Top bar -->
     <div class="topbar">
         <div class="brand">
             <div class="mark"></div>
@@ -173,7 +183,6 @@
         </div>
     </div>
 
-    <!-- TODAY KPIs (6) -->
     <div class="grid kpi">
         <div class="card kpiCard">
             <div class="k">Today • Total Reservations</div>
@@ -207,7 +216,6 @@
         </div>
     </div>
 
-    <!-- DATE RANGE KPIs -->
     <div class="sectionHead">
         <h2>Date range analytics</h2>
         <form class="rangeForm" method="get" action="<%=request.getContextPath()%>/admin/dashboard">
@@ -246,7 +254,6 @@
         </div>
     </div>
 
-    <!-- CHARTS -->
     <div class="sectionHead">
         <h2>Trends (last 30 days)</h2>
         <div class="pill">Fixed window • last 30 days</div>
@@ -266,7 +273,6 @@
         </div>
     </div>
 
-    <!-- ADMIN MANAGEMENT -->
     <div class="sectionHead">
         <h2>Administration</h2>
         <div class="pill">CRUD management</div>
@@ -302,6 +308,14 @@
     </div>
 
 </div>
+
+<% if (toastSuccess != null) { %>
+<div id="toastSuccess" class="toast toast-success">
+    <button class="close" onclick="document.getElementById('toastSuccess').style.display='none'">&times;</button>
+    <h3>Success</h3>
+    <div class="line"><%= toastSuccess %></div>
+</div>
+<% } %>
 
 <script>
     const busyLabels = [
@@ -359,6 +373,18 @@
             scales: { x: { grid: { display: false } }, y: { beginAtZero: true } }
         }
     });
+
+    (function () {
+        var toast = document.getElementById("toastSuccess");
+        if (toast) {
+            toast.style.display = "block";
+            setTimeout(function () {
+                if (toast) {
+                    toast.style.display = "none";
+                }
+            }, 3000);
+        }
+    })();
 </script>
 
 </body>

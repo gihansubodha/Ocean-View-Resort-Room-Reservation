@@ -18,8 +18,15 @@ public class LogoutServlet extends HttpServlet {
     }
 
     private void logout(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        HttpSession s = req.getSession(false);
-        if (s != null) s.invalidate();
-        resp.sendRedirect(req.getContextPath() + "/login.jsp");
+        HttpSession session = req.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+
+        resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        resp.setHeader("Pragma", "no-cache");
+        resp.setDateHeader("Expires", 0);
+
+        resp.sendRedirect(req.getContextPath() + "/login.jsp?msg=loggedout");
     }
 }

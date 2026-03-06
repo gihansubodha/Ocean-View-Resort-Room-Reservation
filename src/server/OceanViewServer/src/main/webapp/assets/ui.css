@@ -300,3 +300,6 @@ label{
 .section{
     background: #FCFCFD;
 }
+.toast-timeout{
+    border-left: 6px solid #F59E0B;
+}

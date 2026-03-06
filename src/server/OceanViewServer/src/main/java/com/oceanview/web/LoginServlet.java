@@ -24,7 +24,6 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        // show login page
         req.getRequestDispatcher("/login.jsp").forward(req, resp);
     }
 
@@ -41,10 +40,11 @@ public class LoginServlet extends HttpServlet {
             if (user != null) {
                 HttpSession session = req.getSession(true);
                 session.setAttribute("authUser", user);
-                session.setAttribute("role", user.getRole()); // helpful for filters/menus
-                session.setMaxInactiveInterval(15 * 60); // 15 mins
+                session.setAttribute("role", user.getRole());
+                session.setMaxInactiveInterval(1 * 60); // 1 minute for testing
 
-                // Role-based redirect
+                session.setAttribute("toastSuccess", "Login successful. Welcome to Ocean View Resort.");
+
                 if ("ADMIN".equalsIgnoreCase(user.getRole())) {
                     resp.sendRedirect(req.getContextPath() + "/admin/dashboard");
                 } else {
