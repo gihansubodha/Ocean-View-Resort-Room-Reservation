@@ -173,21 +173,22 @@ public class AdminDashboardDAOImpl implements AdminDashboardDAO {
     }
 
     @Override
-    public List<Map<String, Object>> getPopularRoomTypes(LocalDate ignoredStart, LocalDate ignoredEnd) throws Exception {
-        LocalDate sDate = LocalDate.now().minusDays(29);
-        LocalDate eDate = LocalDate.now();
+    public List<Map<String, Object>> getPopularRoomTypes(LocalDate start, LocalDate end) throws Exception {
+        LocalDate sDate = (start != null) ? start : LocalDate.now().minusDays(29);
+        LocalDate eDate = (end != null) ? end : LocalDate.now();
 
         List<Map<String, Object>> list = new ArrayList<>();
 
         try (Connection con = DbUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(
-                     "SELECT rt.type_name AS label, COUNT(*) AS cnt " +
-                             "FROM reservations r " +
-                             "JOIN room_types rt ON rt.room_type_id = r.room_type_id " +
-                             "WHERE r.check_in BETWEEN ? AND ? " +
-                             "GROUP BY rt.type_name " +
-                             "ORDER BY cnt DESC " +
-                             "LIMIT 10"
+                     "SELECT rt.type_name AS label, COALESCE(COUNT(r.reservation_id), 0) AS cnt " +
+                             "FROM room_types rt " +
+                             "LEFT JOIN reservations r " +
+                             "       ON r.room_type_id = rt.room_type_id " +
+                             "      AND DATE(r.created_at) BETWEEN ? AND ? " +
+                             "      AND r.status <> 'CANCELLED' " +
+                             "GROUP BY rt.room_type_id, rt.type_name " +
+                             "ORDER BY cnt DESC, rt.type_name ASC"
              )) {
 
             ps.setDate(1, java.sql.Date.valueOf(sDate));

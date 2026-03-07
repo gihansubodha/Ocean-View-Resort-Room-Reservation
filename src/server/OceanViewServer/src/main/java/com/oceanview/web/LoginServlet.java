@@ -41,7 +41,7 @@ public class LoginServlet extends HttpServlet {
                 HttpSession session = req.getSession(true);
                 session.setAttribute("authUser", user);
                 session.setAttribute("role", user.getRole());
-                session.setMaxInactiveInterval(1 * 60); // 1 minute for testing
+                session.setMaxInactiveInterval(15 * 60); // session out set to 15min
 
                 session.setAttribute("toastSuccess", "Login successful. Welcome to Ocean View Resort.");
 
